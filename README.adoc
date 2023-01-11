@@ -1,0 +1,164 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+
+= DJL on Quarkus Java
+
+:numbered:
+
+This project uses Quarkus, the _Supersonic Subatomic Java Framework_ as well as DJL, the _Deep Java Library_.
+
+If you want to learn more about Quarkus, please visit its link:https://quarkus.io[website].
+
+If you want to learn more about DJL, please visit its link:https://djl.ai[website]
+
+== Overview
+The project demonstrates serving of a machine learning model that can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is a type of sub-species of the cat family.
+
+To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/src/main/java/com/example/ImageClassification.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
+
+== Local
+This application can run in your local environment.
+
+=== Pre-reqs
+
+. *Network*
++
+You'll need a reliable broadband network due to downloading of a large quantity of library dependencies.
+
+. *JDK11* (or more recent)
++
+ie: `dnf install java-latest-openjdk-devel`
+
+. *cURL* (or similar http test utility)
++
+ie: `dnf install curl`
+
+=== Quarkus `dev mode`
+
+. Run the application in quarkus dev mode (which enables live coding) using any of the following deep learning engines:
+
+.. Using TensorFlow
++
+```
+./mvnw quarkus:dev -Ptensorflow
+```
+
+.. Using PyTorch
++
+-----
+./mvnw quarkus:dev -Ppytorch
+-----
+
+.. Using MXNet
++
+-----
+./mvnw quarkus:dev -Pmxnet
+-----
+
+. Test REST API using curl command:
++
+-----
+$ curl localhost:8080/predict
+-----
+
+== OpenShift
+
+=== Pre-reqs
+
+. *OpenShift Container Platform*
+.. Tested on OCP 4.12 beta  (but earlier versions should also work fine as well)
+.. CPU:
++
+Allow 1 cpu core for each deep learning engine deployed.
++
+Currently not tested using a GPU.
+.. RAM:
++
+Allow 1Gb RAM for each deep learning engine deployed.
+
+.. Storage:  no PVs needed
+
+. *helm*
++
+ie: `dnf install helm`
+
+. *cURL* (or similar http test utility)
++
+ie: `dnf install curl`
+
+=== Procedure
+
+== Packaging
+
+. PyTorch
++
+-----
+$ ./mvnw clean package \
+            -Ppytorch \
+            -Dquarkus.application.name=djl-example-pytorch \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+. TensorFlow
++
+-----
+./mvnw clean package \
+            -Ptensorflow \
+            -Dquarkus.application.name=djl-example-tensorflow \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+. MXNet
++
+-----
+./mvnw clean package \
+            -Pmxnet \
+            -Dquarkus.application.name=djl-example-mxnet \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+== Future:  Linux Native 
+You can create a native executable using: 
+
+```baseh
+# use PyTorch engine
+./mvnw clean package -Pnative -Ppytorch
+
+# use TensorFlow engine
+./mvnw clean package -Pnative -Ptensorflow
+```
+
+Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
+
+```
+./mvnw clean package -Pnative -Ppytorch -Dquarkus.native.container-build=true
+```
+
+You can then execute your native executable with:
+ 
+```
+target/imageclassification-1.0.0-SNAPSHOT-runner
+
+# Turn on tensorflow javacpp debug log 
+target/imageclassification-1.0.0-SNAPSHOT-runner -Dorg.bytedeco.javacpp.logger.debug=true
+```
+
+If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
+
+== Alternatives
+
+. link:https://docs.djl.ai/docs/serving/index.html[DJL Serving]
++
+DJL Serving is a high performance universal stand-alone model serving solution powered by DJL. It takes a deep learning model, several models, or workflows and makes them available through an HTTP endpoint.
+
+. link:https://camel.apache.org/components/3.20.x/djl-component.html[Camel-DJL]
+
