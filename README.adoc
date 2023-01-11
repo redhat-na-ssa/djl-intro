@@ -91,6 +91,46 @@ ie: `dnf install curl`
 
 === Procedure
 
+==== Deploy
+
+. Deploy app powered by PyTorch:
++
+-----
+$ helm install djl-example-pytorch https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-pytorch-0.0.1.tar.gz
+-----
+
+. Deploy app powered by TensorFlow:
++
+-----
+$ helm install djl-example-tensorflow https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-tensorflow-0.0.1.tar.gz
+-----
+
+. Deploy app powered by Apache MXNet:
++
+-----
+$ helm install djl-example-mxnet https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-mxnet-0.0.1.tar.gz
+-----
+
+==== Test
+
+. Check your routes:
++
+-----
+$ $ oc get route
+
+NAME                     HOST/PORT                                                            PATH   SERVICES                 PORT   TERMINATION   WILDCARD
+djl-example-mxnet        djl-example-mxnet-user1-services.apps.den-east12.ratwater.xyz        /      djl-example-mxnet        http                 None
+djl-example-pytorch      djl-example-pytorch-user1-services.apps.den-east12.ratwater.xyz      /      djl-example-pytorch      http                 None
+djl-example-tensorflow   djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz   /      djl-example-tensorflow   http                 None
+-----
+
+. Test:
++
+-----
+$ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/predict
+-----
+
+
 == Packaging
 
 . PyTorch
