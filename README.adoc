@@ -15,7 +15,8 @@ If you want to learn more about Quarkus, please visit its link:https://quarkus.i
 If you want to learn more about DJL, please visit its link:https://djl.ai[website]
 
 == Overview
-The project demonstrates serving of a machine learning model that can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is a type of sub-species of the cat family.
+The project demonstrates serving of a deep learning _image classification_ application.
+In particular, the application can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is a sub-species of the cat family.
 
 To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/src/main/java/com/example/ImageClassification.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
 

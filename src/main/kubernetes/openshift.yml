@@ -1,0 +1,146 @@
+---
+
+# The reason this file exists is because adding the following limit/request is not possible via kubernetes quarkus properties in src/main/resource/application.properties:
+#   nvidia.com/gpu: "1"
+ 
+# Related documentation: https://quarkus.io/guides/deploying-to-kubernetes#using-existing-resources
+
+
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+    app.openshift.io/runtime: quarkus
+  name: djl-example
+spec:
+  replicas: 1
+  selector:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+  template:
+    metadata:
+      labels:
+        app.openshift.io/runtime: quarkus
+        app.kubernetes.io/name: djl-example
+        app.kubernetes.io/version: 0.0.1
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: JAVA_OPTIONS
+              value: -Dvertx.metrics.options.enabled=true -Dvertx.metrics.options.registryName=prometheus
+          image: djl-example:0.0.1
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: djl-example
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            limits:
+              nvidia.com/gpu: '1'
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              nvidia.com/gpu: '1'
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /deployments/config
+              name: config
+              readOnly: false
+      serviceAccountName: djl-example
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: application.properties
+                path: application.properties
+            name: backend-oidc
+            optional: false
+          name: config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+  name: djl-example-view
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: djl-example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+    app.openshift.io/runtime: quarkus
+  name: djl-example
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+    app.openshift.io/runtime: quarkus
+  name: djl-example
+spec:
+  host: ""
+  path: /
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: djl-example
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: djl-example
+    app.kubernetes.io/version: 0.0.1
+    app.openshift.io/runtime: quarkus
+  name: djl-example
