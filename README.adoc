@@ -33,11 +33,21 @@ You'll need a reliable broadband network due to downloading of a large quantity 
 +
 ie: `dnf install java-latest-openjdk-devel`
 
+. *maven*
++
+ie: `dnf install maven`
+
 . *cURL* (or similar http test utility)
 +
 ie: `dnf install curl`
 
 === Quarkus `dev mode`
+
+. Seed the `maven wrapper`:
++
+-----
+$ mvn wrapper:wrapper
+-----
 
 . Run the application in quarkus dev mode (which enables live coding) using any of the following deep learning engines:
 
@@ -94,6 +104,12 @@ ie: `dnf install curl`
 
 ==== Deploy
 
+. Create a ConfigMap from the project's _application.properties_:
++
+-----
+$ oc create cm djl-example --from-file=config/application.properties
+-----
+
 . Deploy app powered by PyTorch:
 +
 -----
@@ -112,6 +128,18 @@ $ helm install djl-example-tensorflow https://github.com/redhat-na-ssa/djl-intro
 $ helm install djl-example-mxnet https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-mxnet-0.0.1.tar.gz
 -----
 
+. Determine node that pod landed on:
++
+-----
+$ oc get pod \
+    -l deploymentconfig=djl-example-pytorch \
+    -o json \
+    -n user1-services \
+    | jq -r .items[0].spec.nodeName
+-----
++
+NOTE: The result should return the id of your GPU enabled node.
+
 ==== Test
 
 . Check your routes:
@@ -125,19 +153,25 @@ djl-example-pytorch      djl-example-pytorch-user1-services.apps.den-east12.ratw
 djl-example-tensorflow   djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz   /      djl-example-tensorflow   http                 None
 -----
 
-. Test:
+. Determine GPU count that JVM detects:
++
+-----
+$ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/gpucount
+-----
+
+. Test prediction:
 +
 -----
 $ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/predict
 -----
-
 
 == Packaging
 
 . PyTorch
 +
 -----
-$ ./mvnw clean package \
+$ cp config/kube/openshift-pytorch.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
             -Ppytorch \
             -Dquarkus.application.name=djl-example-pytorch \
             -DskipTests \
@@ -148,7 +182,8 @@ $ ./mvnw clean package \
 . TensorFlow
 +
 -----
-./mvnw clean package \
+$ cp config/kube/openshift-tensorflow.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
             -Ptensorflow \
             -Dquarkus.application.name=djl-example-tensorflow \
             -DskipTests \
@@ -159,7 +194,8 @@ $ ./mvnw clean package \
 . MXNet
 +
 -----
-./mvnw clean package \
+$ cp config/kube/openshift-mxnet.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
             -Pmxnet \
             -Dquarkus.application.name=djl-example-mxnet \
             -DskipTests \

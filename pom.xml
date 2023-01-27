@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.acme</groupId>
     <artifactId>djl-example</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <maven.compiler.release>11</maven.compiler.release>
@@ -27,6 +27,8 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <!-- https://mvnrepository.com/artifact/ai.djl/bom/0.20.0 -->
             <dependency>
                 <groupId>ai.djl</groupId>
                 <artifactId>bom</artifactId>
@@ -34,6 +36,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            
             <dependency>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -202,15 +205,13 @@
                     <groupId>ai.djl.pytorch</groupId>
                     <artifactId>pytorch-engine</artifactId>
                 </dependency>
-                <dependency>
-                    <groupId>ai.djl.pytorch</groupId>
-                    <artifactId>pytorch-native-cpu</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                </dependency>
             </dependencies>
         </profile>
         <profile>
+
+            <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
             <id>mxnet</id>
+
             <dependencies>
                 <dependency>
                     <groupId>ai.djl.mxnet</groupId>
@@ -218,13 +219,9 @@
                 </dependency>
                 <dependency>
                     <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-engine</artifactId>
-                </dependency>
-                <!--dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-native-auto</artifactId>
+                    <artifactId>mxnet-native-cu112mkl</artifactId>
                     <classifier>linux-x86_64</classifier>
-                </dependency -->
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -250,16 +247,12 @@
                 </dependency>
                 <dependency>
                     <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-engine</artifactId>
+                    <artifactId>tensorflow-native-cu113</artifactId>
+                    <classifier>linux-x86_64</classifier>
                 </dependency>
                 <dependency>
                     <groupId>ai.djl.tensorflow</groupId>
                     <artifactId>tensorflow-model-zoo</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-native-cpu</artifactId>
-                    <classifier>linux-x86_64</classifier>
                 </dependency>
             </dependencies>
         </profile>

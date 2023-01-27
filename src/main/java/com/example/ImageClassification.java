@@ -12,6 +12,7 @@
  */
 package com.example;
 
+import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.ModelException;
 import ai.djl.engine.Engine;
@@ -30,6 +31,7 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
+import ai.djl.util.cuda.CudaUtils;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 
@@ -47,8 +49,10 @@ import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.MemoryUsage;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Set;
 
 import org.jboss.logging.Logger;
 
@@ -67,6 +71,7 @@ public class ImageClassification {
     private Image image;
     private Criteria<Image, Classifications> criteria;
     ZooModel<Image, Classifications> model;
+    Device gpuDevice;
 
     void startup(@Observes StartupEvent event) throws IOException, ImageReadException, ModelNotFoundException, MalformedModelException {
 
@@ -74,9 +79,20 @@ public class ImageClassification {
         try (InputStream is = url.openStream()) {
             image = ImageFactory.getInstance().fromImage(Imaging.getBufferedImage(is));
         }
+        gpuDevice = Device.gpu();  // Returns default GPU device
+        if(gpuDevice != null)
+            log.info("Found default GPU device: "+gpuDevice.getDeviceId());
+        else
+            log.warn("NO DEFAULT GPU DEVICE FOUND!!!!");
+
+        Set<String> engines = Engine.getAllEngines();
+        for(String engine : engines){
+            log.info("engine = "+engine);
+        }
 
         String engineName = Engine.getInstance().getEngineName();
         log.infov("detect() defaultEngineName = {0}, runtime engineName = {1}", Engine.getDefaultEngineName(), engineName);
+
     
         if (TENSOR_FLOW.equals(engineName)) {
             Translator<Image, Classifications> translator = ImageClassificationTranslator.builder()
@@ -107,6 +123,8 @@ public class ImageClassification {
         }
 
         model  = ModelZoo.loadModel(criteria);
+
+        log.infov("startup*() .... completed !");
     }
 
     @GET
@@ -125,5 +143,42 @@ public class ImageClassification {
             Response eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
             return Uni.createFrom().item(eRes);
         }
+    }       
+    
+    @GET
+    @Path("/logGPUDebug")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Uni<Response> logGPUDebug() {
+
+        Engine.debugEnvironment();
+        Response eRes = Response.status(Response.Status.OK).entity("").build();
+        return Uni.createFrom().item(eRes);
+    }
+
+    @GET
+    @Path("/gpucount")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Uni<Response> getGpuCount() {
+
+        Response eRes = Response.status(Response.Status.OK).entity(Engine.getInstance().getGpuCount()).build();
+        return Uni.createFrom().item(eRes);
+    }
+
+    @GET
+    @Path("/gpumemory")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> getGpuMemory() {
+
+        Device[] devices = Engine.getInstance().getDevices();
+        for(Device dObj : devices) {
+            if(dObj.isGpu()) {
+                MemoryUsage mem = CudaUtils.getGpuMemory(dObj);
+                long gpuRAM = mem.getMax();
+            }else {
+                log.info("Not a GPU: "+dObj.getDeviceId()+" ; type = "+dObj.getDeviceType());
+            }
+        }
+        Response eRes = Response.status(Response.Status.OK).entity(Engine.getInstance().getGpuCount()).build();
+        return Uni.createFrom().item(eRes);
     }
 }
