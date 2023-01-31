@@ -16,14 +16,25 @@ If you want to learn more about DJL, please visit its link:https://djl.ai[websit
 
 == Overview
 The project demonstrates serving of a deep learning _image classification_ application.
-In particular, the application can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is a sub-species of the cat family.
+In particular, the application can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is some sub-species of the cat family.
 
 To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/src/main/java/com/example/ImageClassification.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
+
+Once the app is running, you interact with it via its RESTful endpoints.
+
+image::docs/images/djl-example-swagger.png[]
 
 == Local
 This application can run in your local environment.
 
 === Pre-reqs
+
+. *GPU/CPU*
++
+This app will auto-detect the presence of a GPU and utilize it if found.
+Otherwise, the app will default to a CPU.
++
+The app exposes various diagnostic related REST endpoints that provide insight as to the GPU/CPU it has found.
 
 . *Network*
 +
@@ -43,37 +54,129 @@ ie: `dnf install curl`
 
 === Quarkus `dev mode`
 
+The application can be run locally in quarkus `dev mode` (which enables live coding).
+
+NOTE:  a GPU is not required to run the application.  If deep learning engine detects the presence of a GPU, then it will use it.  If not, the deep learning engine will default to CPUs.
+
 . Seed the `maven wrapper`:
 +
 -----
 $ mvn wrapper:wrapper
 -----
 
-. Run the application in quarkus dev mode (which enables live coding) using any of the following deep learning engines:
+. Run the application in quarkus `dev mode`` using any of the following deep learning engines:
 
-.. Using TensorFlow
+
+.. *TensorFlow*
 +
 ```
 ./mvnw quarkus:dev -Ptensorflow
 ```
 
-.. Using PyTorch
+.. *PyTorch*
 +
 -----
 ./mvnw quarkus:dev -Ppytorch
 -----
 
-.. Using MXNet
+.. *MXNet*
 +
 -----
 ./mvnw quarkus:dev -Pmxnet
 -----
+
+. View RESTful API exposed by app:
++
+Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
 . Test REST API using curl command:
 +
 -----
 $ curl localhost:8080/predict
 -----
+
+== Linux Containers
+
+=== Pre-reqs:
+
+. *podman*
++
+ie:  `dnf install podman`
+
+=== Packaging
+
+Linux container images already exist in `quay.io`.
+If you just want to leverage those existing linux containers, then you can skip this section.
+
+. Using `podman` utility, log into `quay.io`
++
+-----
+$ podman login quay.io
+-----
+
+. *PyTorch*
++
+-----
+$ cp config/kube/openshift-pytorch.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
+            -Ppytorch \
+            -Dquarkus.application.name=djl-example-pytorch \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+. *TensorFlow*
++
+-----
+$ cp config/kube/openshift-tensorflow.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
+            -Ptensorflow \
+            -Dquarkus.application.name=djl-example-tensorflow \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+. *MXNet*
++
+-----
+$ cp config/kube/openshift-mxnet.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
+            -Pmxnet \
+            -Dquarkus.application.name=djl-example-mxnet \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+
+=== Execution
+
+. Set an environment variable that specifies one of the possible deep learning engines:
++
+-----
+$ djl_engine=pytorch
+-----
++
+NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
+
+. Run linux container using designated deep learning engine:
++
+-----
+$ podman run \
+  -d \
+  --rm \
+  --name djl-intro-$djl_engine \
+  -p 8080:8080 \
+  -p 5005:5005 \
+  -e JAVA_ENABLE_DEBUG="true" \
+  quay.io/redhat_naps_da/djl-example-$djl_engine:0.0.3
+-----
+
+. View RESTful API exposed by app:
++
+Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
 == OpenShift
 
@@ -165,43 +268,7 @@ $ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/gpu
 $ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/predict
 -----
 
-== Packaging
 
-. PyTorch
-+
------
-$ cp config/kube/openshift-pytorch.yml src/main/kubernetes/openshift.yml \
-  && ./mvnw clean package \
-            -Ppytorch \
-            -Dquarkus.application.name=djl-example-pytorch \
-            -DskipTests \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true
------
-
-. TensorFlow
-+
------
-$ cp config/kube/openshift-tensorflow.yml src/main/kubernetes/openshift.yml \
-  && ./mvnw clean package \
-            -Ptensorflow \
-            -Dquarkus.application.name=djl-example-tensorflow \
-            -DskipTests \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true
------
-
-. MXNet
-+
------
-$ cp config/kube/openshift-mxnet.yml src/main/kubernetes/openshift.yml \
-  && ./mvnw clean package \
-            -Pmxnet \
-            -Dquarkus.application.name=djl-example-mxnet \
-            -DskipTests \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true
------
 
 == Future:  Linux Native 
 You can create a native executable using: 

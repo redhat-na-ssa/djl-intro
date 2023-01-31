@@ -130,7 +130,7 @@ public class ImageClassification {
     @GET
     @Path("/predict")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> detect() {
+    public Uni<Response> predict() {
 
         try (
             Predictor<Image, Classifications> predictor = model.newPredictor()) {
@@ -151,7 +151,7 @@ public class ImageClassification {
     public Uni<Response> logGPUDebug() {
 
         Engine.debugEnvironment();
-        Response eRes = Response.status(Response.Status.OK).entity("").build();
+        Response eRes = Response.status(Response.Status.OK).entity("Check Logs\n").build();
         return Uni.createFrom().item(eRes);
     }
 
@@ -169,16 +169,13 @@ public class ImageClassification {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getGpuMemory() {
 
-        Device[] devices = Engine.getInstance().getDevices();
-        for(Device dObj : devices) {
-            if(dObj.isGpu()) {
-                MemoryUsage mem = CudaUtils.getGpuMemory(dObj);
-                long gpuRAM = mem.getMax();
-            }else {
-                log.info("Not a GPU: "+dObj.getDeviceId()+" ; type = "+dObj.getDeviceType());
-            }
+        Device dObj = Engine.getInstance().defaultDevice();
+        long gpuRAM = 0L;
+        if(dObj.isGpu()){
+            MemoryUsage mem = CudaUtils.getGpuMemory(dObj);
+            gpuRAM = mem.getMax();
         }
-        Response eRes = Response.status(Response.Status.OK).entity(Engine.getInstance().getGpuCount()).build();
+        Response eRes = Response.status(Response.Status.OK).entity(gpuRAM).build();
         return Uni.createFrom().item(eRes);
     }
 }
