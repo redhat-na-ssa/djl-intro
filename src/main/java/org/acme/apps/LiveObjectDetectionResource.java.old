@@ -1,0 +1,73 @@
+package org.acme.apps;
+
+import java.io.IOException;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.core.Response;
+
+import io.quarkus.arc.lookup.LookupIfProperty;
+import io.smallrye.mutiny.Uni;
+import org.jboss.logging.Logger;
+
+import org.opencv.videoio.VideoCapture;
+import nu.pattern.OpenCV;
+
+import ai.djl.Application;
+import ai.djl.ModelException;
+import ai.djl.inference.Predictor;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.repository.zoo.Criteria;
+import ai.djl.repository.zoo.ZooModel;
+import ai.djl.training.util.ProgressBar;
+
+
+@LookupIfProperty(name = "org.acme.djl.resource", stringValue = "LiveObjectDetectionResource")
+@ApplicationScoped
+public class LiveObjectDetectionResource extends BaseResource implements IApp {
+
+    private static Logger log = Logger.getLogger("LiveObjectDetectionResource");
+
+    VideoCapture vCapture;
+
+    public void startResource() {
+
+        log.info("start()");
+        super.start();
+        try {
+
+            ZooModel<Image, DetectedObjects> model = loadModel();
+            Predictor<Image, DetectedObjects> predictor = model.newPredictor();
+    
+            OpenCV.loadShared();
+            vCapture = new VideoCapture(0);
+            if (!vCapture.isOpened()) {
+                throw new RuntimeException("No camera detected");
+            }
+        }catch(Exception x){
+            throw new RuntimeException(x);
+        }
+
+    }
+
+    public Uni<Response> predict() {
+        
+        Response eRes = Response.status(Response.Status.OK).entity(vCapture.getBackendName()).build();
+        return Uni.createFrom().item(eRes);
+
+    }
+
+    private ZooModel<Image, DetectedObjects> loadModel() throws IOException, ModelException {
+        Criteria<Image, DetectedObjects> criteria =
+                Criteria.builder()
+                        .optApplication(Application.CV.OBJECT_DETECTION)
+                        .setTypes(Image.class, DetectedObjects.class)
+                        .optFilter("backbone", "mobilenet1.0")
+                        .optFilter("dataset", "voc")
+                        .optProgress(new ProgressBar())
+                        .build();
+
+        return criteria.loadModel();
+    }
+    
+}

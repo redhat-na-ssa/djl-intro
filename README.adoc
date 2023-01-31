@@ -89,11 +89,6 @@ $ mvn wrapper:wrapper
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
-. Test REST API using curl command:
-+
------
-$ curl localhost:8080/predict
------
 
 == Linux Containers
 
@@ -256,16 +251,12 @@ djl-example-pytorch      djl-example-pytorch-user1-services.apps.den-east12.ratw
 djl-example-tensorflow   djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz   /      djl-example-tensorflow   http                 None
 -----
 
-. Determine GPU count that JVM detects:
+. View RESTful API exposed by app:
++
+Open a browser tab and navigate to the output of the following:
 +
 -----
-$ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/gpucount
------
-
-. Test prediction:
-+
------
-$ curl -v djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz/predict
+/q/swagger-ui`
 -----
 
 

@@ -98,6 +98,11 @@
         <version>0.2.0</version>
       </dependency>
 
+        <!--dependency>
+            <groupId>ai.djl.opencv</groupId>
+            <artifactId>opencv</artifactId>
+        </dependency-->
+
 
         <dependency>
             <!-- This is required for quarkus native-image generation, not sure why -->
