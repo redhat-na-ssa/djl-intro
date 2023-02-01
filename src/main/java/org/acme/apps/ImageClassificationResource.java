@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.jboss.logging.Logger;
 
@@ -98,7 +99,12 @@ public class ImageClassificationResource extends BaseResource implements IApp {
     
             model  = ModelZoo.loadModel(criteria);
     
-            log.infov("startup*() .... completed !");
+            String aNames = Arrays.toString(model.getArtifactNames());
+            log.infov("startup*() completed ! \n\tmodel name = {0} \n\tmodel path = {1} \n\tartifact names = {2}", 
+                model.getName(), 
+                model.getModelPath().toString(),
+                aNames
+            );
         }catch(Exception x){
             throw new RuntimeException(x);
         }

@@ -89,7 +89,6 @@ public class BaseResource {
                 List<Artifact> artifacts = entryS.getValue();
                 for(Artifact aObj : artifacts){
                     artNode.add(aObj.getName());
-                    log.info(app.getPath() + " : " + aObj.getName() );
                 }
             }
             String modelsJson = rNode.toPrettyString();
