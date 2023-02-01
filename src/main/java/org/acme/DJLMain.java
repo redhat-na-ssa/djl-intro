@@ -60,5 +60,12 @@ public class DJLMain {
     public Uni<Response> getGpuMemory() {
         return djlApp.get().getGpuMemory();
     }
+
+    @GET
+    @Path("/listModelAppSignatures")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> listModelAppSignatures() {
+        return djlApp.get().listModelAppSignatures();
+    }
     
 }
