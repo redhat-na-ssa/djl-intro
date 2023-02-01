@@ -1,0 +1,36 @@
+{
+  "cv/image_classification": [
+    "traced_resnet50",
+    "traced_resnet18",
+    "resnet101_v1",
+    "resnet18_embedding"
+  ],
+  "cv/image_generation": [
+    "style_cezanne",
+    "style_monet",
+    "style_ukiyoe",
+    "style_vangogh",
+    "biggan-deep-128",
+    "biggan-deep-256",
+    "biggan-deep-512"
+  ],
+  "cv/object_detection": [
+    "ssd_300_resnet50"
+  ],
+  "cv/semantic_segmentation": [
+    "deeplabv3"
+  ],
+  "nlp/question_answer": [
+    "distilbert-base-uncased-distilled-squad",
+    "distilbert-base-cased-distilled-squad",
+    "trace_bertqa",
+    "trace_cased_bertqa",
+    "trace_distilbertqa"
+  ],
+  "nlp/sentiment_analysis": [
+    "traced_distilbert_sst_english"
+  ],
+  "timeseries/forecasting": [
+    "m5forecast"
+  ]
+}

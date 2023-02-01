@@ -1,4 +1,4 @@
-mv package org.acme.apps;
+package org.acme.apps;
 
 import java.io.IOException;
 

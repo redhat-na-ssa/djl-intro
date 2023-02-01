@@ -1,0 +1,9 @@
+{
+  "cv/image_classification": [
+    "resnet50",
+    "mobilenet"
+  ],
+  "cv/object_detection": [
+    "ssd"
+  ]
+}

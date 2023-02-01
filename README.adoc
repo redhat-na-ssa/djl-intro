@@ -297,3 +297,13 @@ DJL Serving is a high performance universal stand-alone model serving solution p
 
 . link:https://camel.apache.org/components/3.20.x/djl-component.html[Camel-DJL]
 
+== Quarkus project seed
+
+-----
+mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
+        -DprojectGroupId=org.acme \
+        -DprojectArtifactId=djl-objectdetect \
+        -Dextensions="quarkus-resteasy-reactive, quarkus-resteasy-reactive-jackson, quarkus-smallrye-health, quarkus-container-image-docker, quarkus-openshift, quarkus-kubernetes-config " \
+        -DplatformVersion=2.14.0.Final
+-----
+

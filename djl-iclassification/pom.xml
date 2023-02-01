@@ -4,7 +4,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.acme</groupId>
-    <artifactId>djl-example</artifactId>
+    <artifactId>djl-iclassification</artifactId>
     <version>0.0.3</version>
     <properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -97,12 +97,6 @@
         <artifactId>quarkus-helm</artifactId>
         <version>0.2.0</version>
       </dependency>
-
-        <!--dependency>
-            <groupId>ai.djl.opencv</groupId>
-            <artifactId>opencv</artifactId>
-        </dependency-->
-
 
         <dependency>
             <!-- This is required for quarkus native-image generation, not sure why -->
