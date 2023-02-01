@@ -1,36 +1,140 @@
 {
   "cv/image_classification": [
-    "traced_resnet50",
-    "traced_resnet18",
-    "resnet101_v1",
-    "resnet18_embedding"
+    {
+      "traced_resnet50 , 0.0.1": [
+        "layers:50",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "traced_resnet18 , 0.0.1": [
+        "layers:18",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet101_v1 , 0.0.1": [
+        "layers:101",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet18_embedding , 0.0.1": []
+    }
   ],
   "cv/image_generation": [
-    "style_cezanne",
-    "style_monet",
-    "style_ukiyoe",
-    "style_vangogh",
-    "biggan-deep-128",
-    "biggan-deep-256",
-    "biggan-deep-512"
+    {
+      "style_cezanne , 0.0.1": [
+        "artist:cezanne"
+      ]
+    },
+    {
+      "style_monet , 0.0.1": [
+        "artist:monet"
+      ]
+    },
+    {
+      "style_ukiyoe , 0.0.1": [
+        "artist:ukiyoe"
+      ]
+    },
+    {
+      "style_vangogh , 0.0.1": [
+        "artist:vangogh"
+      ]
+    },
+    {
+      "biggan-deep-128 , 0.0.1": [
+        "layers:12",
+        "size:128",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "biggan-deep-256 , 0.0.1": [
+        "layers:24",
+        "size:256",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "biggan-deep-512 , 0.0.1": [
+        "layers:12",
+        "size:512",
+        "dataset:imagenet"
+      ]
+    }
   ],
   "cv/object_detection": [
-    "ssd_300_resnet50"
+    {
+      "ssd_300_resnet50 , 0.0.1": [
+        "size:300",
+        "backbone:resnet50",
+        "dataset:coco"
+      ]
+    }
   ],
   "cv/semantic_segmentation": [
-    "deeplabv3"
+    {
+      "deeplabv3 , 0.0.1": [
+        "backbone:resnet50",
+        "flavor:v1b",
+        "dataset:coco"
+      ]
+    }
   ],
   "nlp/question_answer": [
-    "distilbert-base-uncased-distilled-squad",
-    "distilbert-base-cased-distilled-squad",
-    "trace_bertqa",
-    "trace_cased_bertqa",
-    "trace_distilbertqa"
+    {
+      "distilbert-base-uncased-distilled-squad , 0.0.1": [
+        "modelType:distilbert",
+        "size:base",
+        "cased:false",
+        "dataset:SQuAD"
+      ]
+    },
+    {
+      "distilbert-base-cased-distilled-squad , 0.0.1": [
+        "modelType:distilbert",
+        "size:base",
+        "cased:true",
+        "dataset:SQuAD"
+      ]
+    },
+    {
+      "trace_bertqa , 0.0.1": [
+        "backbone:bert",
+        "cased:false",
+        "dataset:SQuAD"
+      ]
+    },
+    {
+      "trace_cased_bertqa , 0.0.1": [
+        "backbone:bert",
+        "cased:true",
+        "dataset:SQuAD"
+      ]
+    },
+    {
+      "trace_distilbertqa , 0.0.1": [
+        "backbone:distilbert",
+        "cased:true",
+        "dataset:SQuAD"
+      ]
+    }
   ],
   "nlp/sentiment_analysis": [
-    "traced_distilbert_sst_english"
+    {
+      "traced_distilbert_sst_english , 0.0.1": [
+        "backbone:distilbert",
+        "dataset:sst"
+      ]
+    }
   ],
   "timeseries/forecasting": [
-    "m5forecast"
+    {
+      "m5forecast , 0.0.1": [
+        "dataset:m5forecast"
+      ]
+    }
   ]
 }

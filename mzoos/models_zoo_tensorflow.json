@@ -1,9 +1,25 @@
 {
   "cv/image_classification": [
-    "resnet50",
-    "mobilenet"
+    {
+      "resnet50 , 0.0.1": [
+        "flavor:v1",
+        "layers:50",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenet , 0.0.1": [
+        "flavor:v2",
+        "dataset:imagenet"
+      ]
+    }
   ],
   "cv/object_detection": [
-    "ssd"
+    {
+      "ssd , 0.0.1": [
+        "backbone:mobilenet_v2",
+        "dataset:openimages_v4"
+      ]
+    }
   ]
 }

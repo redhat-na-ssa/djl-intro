@@ -18,6 +18,7 @@ import ai.djl.Application;
 import ai.djl.Device;
 import ai.djl.engine.Engine;
 import ai.djl.repository.Artifact;
+import ai.djl.repository.Metadata;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.util.cuda.CudaUtils;
 import io.smallrye.mutiny.Uni;
@@ -88,7 +89,14 @@ public class BaseResource {
                 ArrayNode artNode = rNode.putArray(app.getPath());
                 List<Artifact> artifacts = entryS.getValue();
                 for(Artifact aObj : artifacts){
-                    artNode.add(aObj.getName());
+                    ObjectNode secondNode = oMapper.createObjectNode();
+                    ArrayNode propNode = secondNode.putArray(aObj.getName() + " , "+aObj.getVersion());
+
+                    Map<String, String> props = aObj.getProperties();
+                    for(Entry<String, String> eObj : props.entrySet()) {
+                        propNode.add(eObj.getKey()+":"+eObj.getValue());
+                    }
+                    artNode.add(secondNode);
                 }
             }
             String modelsJson = rNode.toPrettyString();

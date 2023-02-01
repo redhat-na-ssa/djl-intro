@@ -1,88 +1,486 @@
 {
   "cv/action_recognition": [
-    "vgg16_ucf101",
-    "inceptionv3_ucf101"
+    {
+      "vgg16_ucf101 , 0.0.1": [
+        "backbone:vgg16",
+        "dataset:ucf101"
+      ]
+    },
+    {
+      "inceptionv3_ucf101 , 0.0.1": [
+        "backbone:inceptionv3",
+        "dataset:ucf101"
+      ]
+    }
   ],
   "cv/image_classification": [
-    "googlenet",
-    "darknet53",
-    "squeezenet1.0",
-    "inceptionv3",
-    "mobilenet0.25",
-    "mobilenet0.5",
-    "mobilenet0.75",
-    "mobilenet1.0",
-    "mobilenetv2_0.25",
-    "mobilenetv2_0.5",
-    "mobilenetv2_0.75",
-    "mobilenetv2_1.0",
-    "mobilenetv3_small",
-    "mobilenetv3_large",
-    "senet_154",
-    "alexnet",
-    "mlp",
-    "resnet18_v1",
-    "resnet50_v2",
-    "resnet101_v1",
-    "resnet152_v1d",
-    "resnet50_v1_cifar10",
-    "se_resnext101_32x4d",
-    "se_resnext101_64x4d",
-    "vgg11",
-    "vgg13",
-    "vgg16",
-    "vgg19",
-    "vgg11_bn",
-    "vgg13_bn",
-    "vgg16_bn",
-    "vgg19_bn",
-    "densenet121",
-    "densenet161",
-    "densenet169",
-    "densenet201",
-    "xception",
-    "resnest14",
-    "resnest26",
-    "resnest50",
-    "resnest101",
-    "resnest200",
-    "resnest269"
+    {
+      "googlenet , 0.0.1": [
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "darknet53 , 0.0.1": [
+        "layers:53",
+        "flavor:v3",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "squeezenet1.0 , 0.0.1": [
+        "flavor:1.0",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "inceptionv3 , 0.0.1": [
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenet0.25 , 0.0.1": [
+        "flavor:v1",
+        "multiplier:0.25",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenet0.5 , 0.0.1": [
+        "flavor:v1",
+        "multiplier:0.5",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenet0.75 , 0.0.1": [
+        "flavor:v1",
+        "multiplier:0.75",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenet1.0 , 0.0.1": [
+        "flavor:v1",
+        "multiplier:1.0",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv2_0.25 , 0.0.1": [
+        "flavor:v2",
+        "multiplier:0.25",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv2_0.5 , 0.0.1": [
+        "flavor:v2",
+        "multiplier:0.5",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv2_0.75 , 0.0.1": [
+        "flavor:v2",
+        "multiplier:0.75",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv2_1.0 , 0.0.1": [
+        "flavor:v2",
+        "multiplier:1.0",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv3_small , 0.0.1": [
+        "flavor:v3_small",
+        "multiplier:1.0",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mobilenetv3_large , 0.0.1": [
+        "flavor:v3_large",
+        "multiplier:1.0",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "senet_154 , 0.0.1": [
+        "layers:154",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "alexnet , 0.0.1": [
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "mlp , 0.0.1": [
+        "dataset:mnist"
+      ]
+    },
+    {
+      "resnet18_v1 , 0.0.1": [
+        "layers:18",
+        "flavor:v1",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet50_v2 , 0.0.1": [
+        "layers:50",
+        "flavor:v2",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet101_v1 , 0.0.1": [
+        "layers:101",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet152_v1d , 0.0.1": [
+        "layers:152",
+        "flavor:v1d",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnet50_v1_cifar10 , 0.0.1": [
+        "layers:50",
+        "flavor:v1",
+        "dataset:cifar10"
+      ]
+    },
+    {
+      "se_resnext101_32x4d , 0.0.1": [
+        "layers:101",
+        "flavor:32x4d",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "se_resnext101_64x4d , 0.0.1": [
+        "layers:101",
+        "flavor:64x4d",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg11 , 0.0.1": [
+        "layers:11",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg13 , 0.0.1": [
+        "layers:13",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg16 , 0.0.1": [
+        "layers:16",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg19 , 0.0.1": [
+        "layers:19",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg11_bn , 0.0.1": [
+        "flavor:batch_norm",
+        "layers:11",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg13_bn , 0.0.1": [
+        "flavor:batch_norm",
+        "layers:13",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg16_bn , 0.0.1": [
+        "flavor:batch_norm",
+        "layers:16",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "vgg19_bn , 0.0.1": [
+        "flavor:batch_norm",
+        "layers:19",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "densenet121 , 0.0.1": [
+        "layers:121",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "densenet161 , 0.0.1": [
+        "layers:161",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "densenet169 , 0.0.1": [
+        "layers:169",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "densenet201 , 0.0.1": [
+        "layers:201",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "xception , 0.0.1": [
+        "flavor:65",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest14 , 0.0.1": [
+        "layers:14",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest26 , 0.0.1": [
+        "layers:26",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest50 , 0.0.1": [
+        "layers:50",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest101 , 0.0.1": [
+        "layers:101",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest200 , 0.0.1": [
+        "layers:200",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "resnest269 , 0.0.1": [
+        "layers:269",
+        "dataset:imagenet"
+      ]
+    }
   ],
   "cv/instance_segmentation": [
-    "mask_rcnn_resnet18_v1b_coco",
-    "mask_rcnn_resnet101_v1d_coco"
+    {
+      "mask_rcnn_resnet18_v1b_coco , 0.0.1": [
+        "backbone:resnet18",
+        "flavor:v1b",
+        "dataset:coco"
+      ]
+    },
+    {
+      "mask_rcnn_resnet101_v1d_coco , 0.0.1": [
+        "backbone:resnet101",
+        "flavor:v1d",
+        "dataset:coco"
+      ]
+    }
   ],
   "cv/object_detection": [
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "yolo",
-    "ssd_512_resnet50_v1_voc",
-    "ssd_512_vgg16_atrous_coco",
-    "ssd_512_mobilenet1.0_voc",
-    "ssd_300_vgg16_atrous_voc"
+    {
+      "yolo , 0.0.1": [
+        "dataset:voc",
+        "version:3",
+        "backbone:darknet53",
+        "imageSize:320"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:voc",
+        "version:3",
+        "backbone:darknet53",
+        "imageSize:416"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:voc",
+        "version:3",
+        "backbone:mobilenet1.0",
+        "imageSize:320"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:voc",
+        "version:3",
+        "backbone:mobilenet1.0",
+        "imageSize:416"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:darknet53",
+        "imageSize:320"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:darknet53",
+        "imageSize:416"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:darknet53",
+        "imageSize:608"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:mobilenet1.0",
+        "imageSize:320"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:mobilenet1.0",
+        "imageSize:416"
+      ]
+    },
+    {
+      "yolo , 0.0.1": [
+        "dataset:coco",
+        "version:3",
+        "backbone:mobilenet1.0",
+        "imageSize:608"
+      ]
+    },
+    {
+      "ssd_512_resnet50_v1_voc , 0.0.1": [
+        "size:512",
+        "backbone:resnet50",
+        "flavor:v1",
+        "dataset:voc"
+      ]
+    },
+    {
+      "ssd_512_vgg16_atrous_coco , 0.0.1": [
+        "size:512",
+        "backbone:vgg16",
+        "flavor:atrous",
+        "dataset:coco"
+      ]
+    },
+    {
+      "ssd_512_mobilenet1.0_voc , 0.0.1": [
+        "size:512",
+        "backbone:mobilenet1.0",
+        "dataset:voc"
+      ]
+    },
+    {
+      "ssd_300_vgg16_atrous_voc , 0.0.1": [
+        "size:300",
+        "backbone:vgg16",
+        "flavor:atrous",
+        "dataset:voc"
+      ]
+    }
   ],
   "cv/pose_estimation": [
-    "simple_pose_resnet18_v1b",
-    "simple_pose_resnet50_v1b",
-    "simple_pose_resnet101_v1d",
-    "simple_pose_resnet152_v1b",
-    "simple_pose_resnet152_v1d"
+    {
+      "simple_pose_resnet18_v1b , 0.0.1": [
+        "backbone:resnet18",
+        "flavor:v1b",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "simple_pose_resnet50_v1b , 0.0.1": [
+        "backbone:resnet50",
+        "flavor:v1b",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "simple_pose_resnet101_v1d , 0.0.1": [
+        "backbone:resnet101",
+        "flavor:v1d",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "simple_pose_resnet152_v1b , 0.0.1": [
+        "backbone:resnet152",
+        "flavor:v1b",
+        "dataset:imagenet"
+      ]
+    },
+    {
+      "simple_pose_resnet152_v1d , 0.0.1": [
+        "backbone:resnet152",
+        "flavor:v1d",
+        "dataset:imagenet"
+      ]
+    }
   ],
   "nlp/question_answer": [
-    "static_bert_qa"
+    {
+      "static_bert_qa , 0.0.1": [
+        "backbone:bert",
+        "dataset:book_corpus_wiki_en_uncased"
+      ]
+    }
   ],
   "nlp/word_embedding": [
-    "glove"
+    {
+      "glove , 0.0.2": [
+        "dimensions:50"
+      ]
+    }
   ],
   "timeseries/forecasting": [
-    "airpassengers",
-    "m5forecast"
+    {
+      "airpassengers , 0.0.1": [
+        "dataset:airpassengers"
+      ]
+    },
+    {
+      "m5forecast , 0.0.1": [
+        "dataset:m5forecast"
+      ]
+    }
   ]
 }
