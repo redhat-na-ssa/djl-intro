@@ -65,6 +65,12 @@
       <artifactId>quarkus-arc</artifactId>
     </dependency>
 
+    <!-- Expose service endpoints through Swagger/OpenAPI -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>ai.djl.opencv</groupId>
       <artifactId>opencv</artifactId>
