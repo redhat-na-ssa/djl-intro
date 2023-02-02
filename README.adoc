@@ -18,9 +18,17 @@ If you want to learn more about DJL, please visit its link:https://djl.ai[websit
 The project demonstrates serving of a deep learning _image classification_ application.
 In particular, the application can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is some sub-species of the cat family.
 
-To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/djl-iclassification/src/main/java/org/acme/apps/ImageClassificationResource.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
+To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/djl-iclassification/src/main/java/org/acme/apps/ImageClassificationResource.java[simple app] can be powered (mostly via configuration) by various Deep Learning frameworks (ie: _Tensorflow_, _PyTorch_, _MXNet_) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
 
-Once the app is running, you interact with it via its RESTful endpoints.
+
+
+This project introduces the following _deep learning_ capabilities of DJL :
+
+. *Image Classification*
+. *Live Object Detection*
+
+
+Once the apps are running, you interact with them via their RESTful endpoints.
 
 image::docs/images/djl-iclassification-swagger.png[]
 
@@ -351,3 +359,6 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
         -DplatformVersion=2.14.0.Final
 -----
 
+== Questions
+
+. Compare link:https://djl.ai/docs/development/inference_performance_optimization.html[DJL threading/performance] with scalability link:https://developer.nvidia.com/nvidia-triton-inference-server#scalable-ai[claims] of NVIDIA Triton
