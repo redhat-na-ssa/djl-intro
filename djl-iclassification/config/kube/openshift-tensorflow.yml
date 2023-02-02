@@ -9,15 +9,15 @@
 apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
-  name: djl-example-tensorflow
+  name: djl-iclassification-tensorflow
 spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: djl-example-tensorflow
+        app.kubernetes.io/name: djl-iclassification-tensorflow
     spec:
       containers:
-        - name: djl-example-tensorflow
+        - name: djl-iclassification-tensorflow
           resources:
             limits:
               nvidia.com/gpu: '1'

@@ -70,7 +70,7 @@
         <!--
         $ ./mvnw clean package \
                 -Ptensorflow \
-                -Dquarkus.application.name=djl-example-tensorflow \
+                -Dquarkus.application.name=djl-iclassification-tensorflow \
                 -DskipTests \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=true                             :   Build container image (using docker/podman) and push container image to repo
@@ -90,7 +90,7 @@
       </dependency>
 
       <!--
-        $ helm install djl-example ./target/helm/openshift/djl-example        :   deploy helm configured artifacts to OCP
+        $ helm install djl-iclassification ./target/helm/openshift/djl-iclassification        :   deploy helm configured artifacts to OCP
       -->
       <dependency>
         <groupId>io.quarkiverse.helm</groupId>

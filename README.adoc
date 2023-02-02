@@ -18,11 +18,11 @@ If you want to learn more about DJL, please visit its link:https://djl.ai[websit
 The project demonstrates serving of a deep learning _image classification_ application.
 In particular, the application can predict the probability that a link:https://djl-ai.s3.amazonaws.com/resources/images/kitten_small.jpg[kitten] depicted in an image is some sub-species of the cat family.
 
-To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/src/main/java/com/example/ImageClassification.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
+To do so, the same link:https://github.com/redhat-na-ssa/djl-intro/blob/main/djl-iclassification/src/main/java/org/acme/apps/ImageClassificationResource.java[simple app] can be powered (mostly via configuration) by various Deep learning frameworks (ie: Tensorflow, PyTorch, MXNet) as link:https://djl.ai/docs/engine.html#supported-engines[supported by DJL].
 
 Once the app is running, you interact with it via its RESTful endpoints.
 
-image::docs/images/djl-example-swagger.png[]
+image::docs/images/djl-iclassification-swagger.png[]
 
 == Local
 This application can run in your local environment.
@@ -98,55 +98,43 @@ Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 +
 ie:  `dnf install podman`
 
-=== Packaging
-
+. *quay.io*
++
 Linux container images already exist in `quay.io`.
-If you just want to leverage those existing linux containers, then you can skip this section.
-
-. Using `podman` utility, log into `quay.io`
+If you want to push to quay.io, then authenticate as follows:
 +
 -----
 $ podman login quay.io
 -----
 
-. *PyTorch*
-+
------
-$ cp config/kube/openshift-pytorch.yml src/main/kubernetes/openshift.yml \
-  && ./mvnw clean package \
-            -Ppytorch \
-            -Dquarkus.application.name=djl-example-pytorch \
-            -DskipTests \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true
------
+=== Image Classification
 
-. *TensorFlow*
-+
------
-$ cp config/kube/openshift-tensorflow.yml src/main/kubernetes/openshift.yml \
-  && ./mvnw clean package \
-            -Ptensorflow \
-            -Dquarkus.application.name=djl-example-tensorflow \
-            -DskipTests \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true
------
+==== Create Linux Container
 
-. *MXNet*
+. Change directory into:  `djl-iclassification`
+
+. Set an environment variable that specifies one of the possible deep learning engines:
 +
 -----
-$ cp config/kube/openshift-mxnet.yml src/main/kubernetes/openshift.yml \
+$ djl_engine=pytorch
+-----
++
+NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
+
+. Build container and generate openshift/helm configs:
++
+-----
+$ cp config/kube/openshift-$djl_engine.yml src/main/kubernetes/openshift.yml \
   && ./mvnw clean package \
-            -Pmxnet \
-            -Dquarkus.application.name=djl-example-mxnet \
+            -P$djl_engine \
+            -Dquarkus.application.name=djl-iclassification-$djl_engine \
             -DskipTests \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=true
 -----
 
 
-=== Execution
+==== Execution
 
 . Set an environment variable that specifies one of the possible deep learning engines:
 +
@@ -162,12 +150,68 @@ NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
 $ podman run \
   -d \
   --rm \
-  --name djl-intro-$djl_engine \
+  --name djl-iclass-$djl_engine \
   -p 8080:8080 \
   -p 5005:5005 \
   -e JAVA_ENABLE_DEBUG="true" \
-  quay.io/redhat_naps_da/djl-example-$djl_engine:0.0.3
+  quay.io/redhat_naps_da/djl-iclassification-$djl_engine:0.0.3
 -----
+
+. View RESTful API exposed by app:
++
+Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
+
+=== Object Detection
+
+==== Create Linux Container
+
+. Change directory into:  `djl-objectdetect`
+
+. Set an environment variable that specifies one of the possible deep learning engines:
++
+-----
+$ djl_engine=pytorch
+-----
++
+NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
+
+. Build container and generate openshift/helm configs:
++
+-----
+$ ./mvnw clean package \
+            -P$djl_engine \
+            -Dquarkus.application.name=djl-objectdetect-$djl_engine \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+==== Execution
+
+. Set an environment variable that specifies one of the possible deep learning engines:
++
+-----
+$ djl_engine=pytorch
+-----
++
+NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
+
+. Run linux container using designated deep learning engine:
++
+-----
+$ podman run \
+  -d \
+  --rm \
+  --name djl-objectdetect-$djl_engine \
+  -p 8080:8080 \
+  -p 5005:5005 \
+  -e JAVA_ENABLE_DEBUG="true" \
+  --device /dev/video0 \
+  --group-add keep-groups \
+  quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
+-----
++
+NOTE:  Need to research link:https://www.redhat.com/sysadmin/files-devices-podman[this]
 
 . View RESTful API exposed by app:
 +
@@ -205,32 +249,32 @@ ie: `dnf install curl`
 . Create a ConfigMap from the project's _application.properties_:
 +
 -----
-$ oc create cm djl-example --from-file=config/application.properties
+$ oc create cm djl-iclassification --from-file=config/application.properties
 -----
 
 . Deploy app powered by PyTorch:
 +
 -----
-$ helm install djl-example-pytorch https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-pytorch-0.0.1.tar.gz
+$ helm install djl-iclassification-pytorch https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-iclassification-pytorch-0.0.1.tar.gz
 -----
 
 . Deploy app powered by TensorFlow:
 +
 -----
-$ helm install djl-example-tensorflow https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-tensorflow-0.0.1.tar.gz
+$ helm install djl-iclassification-tensorflow https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-iclassification-tensorflow-0.0.1.tar.gz
 -----
 
 . Deploy app powered by Apache MXNet:
 +
 -----
-$ helm install djl-example-mxnet https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-example-mxnet-0.0.1.tar.gz
+$ helm install djl-iclassification-mxnet https://github.com/redhat-na-ssa/djl-intro/raw/main/helm/djl-iclassification-mxnet-0.0.1.tar.gz
 -----
 
 . Determine node that pod landed on:
 +
 -----
 $ oc get pod \
-    -l deploymentconfig=djl-example-pytorch \
+    -l deploymentconfig=djl-iclassification-pytorch \
     -o json \
     -n user1-services \
     | jq -r .items[0].spec.nodeName
@@ -246,9 +290,9 @@ NOTE: The result should return the id of your GPU enabled node.
 $ $ oc get route
 
 NAME                     HOST/PORT                                                            PATH   SERVICES                 PORT   TERMINATION   WILDCARD
-djl-example-mxnet        djl-example-mxnet-user1-services.apps.den-east12.ratwater.xyz        /      djl-example-mxnet        http                 None
-djl-example-pytorch      djl-example-pytorch-user1-services.apps.den-east12.ratwater.xyz      /      djl-example-pytorch      http                 None
-djl-example-tensorflow   djl-example-tensorflow-user1-services.apps.den-east12.ratwater.xyz   /      djl-example-tensorflow   http                 None
+djl-iclassification-mxnet        djl-iclassification-mxnet-user1-services.apps.den-east12.ratwater.xyz        /      djl-iclassification-mxnet        http                 None
+djl-iclassification-pytorch      djl-iclassification-pytorch-user1-services.apps.den-east12.ratwater.xyz      /      djl-iclassification-pytorch      http                 None
+djl-iclassification-tensorflow   djl-iclassification-tensorflow-user1-services.apps.den-east12.ratwater.xyz   /      djl-iclassification-tensorflow   http                 None
 -----
 
 . View RESTful API exposed by app:
