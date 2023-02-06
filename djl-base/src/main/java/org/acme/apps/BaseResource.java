@@ -26,9 +26,9 @@ public class BaseResource {
 
     private static final Logger log = Logger.getLogger("ImageClassResource");
 
-    String engineName;
+    private String engineName;
 
-    ObjectMapper oMapper;
+    private ObjectMapper oMapper;
 
     public void start() {
 
@@ -48,6 +48,10 @@ public class BaseResource {
 
         oMapper = new ObjectMapper();
 
+    }
+
+    public String getEngineName() {
+        return engineName;
     }
 
     public Uni<Response> logGPUDebug() {

@@ -355,7 +355,7 @@ DJL Serving is a high performance universal stand-alone model serving solution p
 mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
         -DprojectGroupId=org.acme \
         -DprojectArtifactId=djl-objectdetect \
-        -Dextensions="quarkus-resteasy-reactive, quarkus-resteasy-reactive-jackson, quarkus-smallrye-health, quarkus-container-image-docker, quarkus-openshift, quarkus-kubernetes-config " \
+        -Dextensions="quarkus-resteasy-reactive, quarkus-resteasy-reactive-jackson, quarkus-smallrye-health, quarkus-container-image-docker, quarkus-openshift, quarkus-kubernetes-config, quarkus-smallrye-openapi" \
         -DplatformVersion=2.14.0.Final
 -----
 

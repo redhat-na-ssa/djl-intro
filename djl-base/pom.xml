@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.acme</groupId>
-  <artifactId>djl-objectdetect</artifactId>
+  <artifactId>djl-base</artifactId>
   <version>0.0.1</version>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -17,18 +17,25 @@
     <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
     <djl.version>0.20.0</djl.version>
   </properties>
+
+  <repositories>
+      <repository>
+          <id>djl.ai</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      </repository>
+  </repositories>
+
   <dependencyManagement>
     <dependencies>
 
-        <!-- https://mvnrepository.com/artifact/ai.djl/bom/0.20.0 -->
-        <dependency>
-            <groupId>ai.djl</groupId>
-            <artifactId>bom</artifactId>
-            <version>${djl.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-
+      <!-- https://mvnrepository.com/artifact/ai.djl/bom/0.20.0 -->
+      <dependency>
+          <groupId>ai.djl</groupId>
+          <artifactId>bom</artifactId>
+          <version>${djl.version}</version>
+          <type>pom</type>
+          <scope>import</scope>
+      </dependency>
 
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
@@ -40,13 +47,6 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
-
-    <dependency>
-      <groupId>org.acme</groupId>
-      <artifactId>djl-base</artifactId>
-      <version>0.0.1</version>
-    </dependency>
-
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
@@ -57,42 +57,14 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-health</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-kubernetes-config</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-docker</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
     </dependency>
 
-    <!-- Expose service endpoints through Swagger/OpenAPI -->
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
+      <groupId>ai.djl</groupId>
+      <artifactId>api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>ai.djl.opencv</groupId>
-      <artifactId>opencv</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.rest-assured</groupId>
-      <artifactId>rest-assured</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -164,74 +136,5 @@
         <quarkus.package.type>native</quarkus.package.type>
       </properties>
     </profile>
-
-        <profile>
-            <id>pytorch</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>ai.djl.pytorch</groupId>
-                    <artifactId>pytorch-model-zoo</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.pytorch</groupId>
-                    <artifactId>pytorch-engine</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
-
-            <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
-            <id>mxnet</id>
-
-            <dependencies>
-                <dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-model-zoo</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-native-cu112mkl</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
-            <id>tensorflow</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>javacpp</artifactId>
-                    <!-- Only 1.5.4 works with GraalVM -->
-                    <version>1.5.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>javacpp</artifactId>
-                    <version>1.5.4</version>
-                    <classifier>linux-x86_64</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-                    <!-- Why this get downgraded to 3.6.1 by default? -->
-                    <version>3.16.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-native-cu113</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-model-zoo</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-
   </profiles>
 </project>

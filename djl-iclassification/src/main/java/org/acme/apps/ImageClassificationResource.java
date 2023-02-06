@@ -83,7 +83,7 @@ public class ImageClassificationResource extends BaseResource implements IApp {
             
             // Whay does TensorFlow need a Translator ??
             Translator<Image, Classifications> translator = null;
-            if (TENSOR_FLOW.equals(engineName)) {
+            if (TENSOR_FLOW.equals(this.getEngineName())) {
                 translator = ImageClassificationTranslator.builder()
                 .addTransform(new Resize(224))
                 .addTransform(new Normalize(MEAN, STD))

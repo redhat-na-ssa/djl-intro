@@ -47,6 +47,13 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+
+    <dependency>
+      <groupId>org.acme</groupId>
+      <artifactId>djl-base</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive</artifactId>
