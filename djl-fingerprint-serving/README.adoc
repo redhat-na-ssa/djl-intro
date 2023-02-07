@@ -1,0 +1,15 @@
+= djl-fingerprint-serving Project
+
+-----
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install pip tensorflow -U
+-----
+
+-----
+$ saved_model_cli show --dir model.savedmodel/
+-----
+
+-----
+$ saved_model_cli show --dir model.savedmodel --tag_set serve
+-----

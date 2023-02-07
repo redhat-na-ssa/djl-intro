@@ -46,6 +46,12 @@
       <version>0.0.1</version>
     </dependency>
     <dependency>
+      <!-- GraalVM doesn't work with ImageIO, use apache commons imaging instead -->
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-imaging</artifactId>
+      <version>1.0-alpha1</version>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
     </dependency>
