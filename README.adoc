@@ -204,22 +204,46 @@ $ djl_engine=pytorch
 +
 NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
 
+. The `djl-objectdetection` container needs access to the host's video card.
++
+Podman allows for that however you need to ensure that your host operating system user is a member of the `video` group:
++
+-----
+$ sudo usermod -a -G video <your OS user name>
+-----
+
+. The `djl-objectdetection` container needs the ability to write images to the filesystem of the host.
+Subsequently, in this step you enable the local filesystem to be writable by the container:
++
+-----
+$ I_DIR=/tmp/org.acme.objectdetection/ \
+    && mkdir -p $I_DIR
+
+$ sudo semanage fcontext -a \
+        -t container_file_t "$I_DIR(/.*)?"
+
+$ sudo restorecon -R $I_DIR
+
+$ podman unshare chown -R 185:185 $I_DIR
+-----
+
 . Run linux container using designated deep learning engine:
++
+NOTE: podman utility provides access to the host machine's video card as per link:https://www.redhat.com/sysadmin/files-devices-podman[this document]
 +
 -----
 $ podman run \
-  -d \
-  --rm \
-  --name djl-objectdetect-$djl_engine \
-  -p 8080:8080 \
-  -p 5005:5005 \
-  -e JAVA_ENABLE_DEBUG="true" \
-  --device /dev/video0 \
-  --group-add keep-groups \
-  quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
+    -d \
+    --rm \
+    --name djl-objectdetect-$djl_engine \
+    -p 8080:8080 \
+    -p 5005:5005 \
+    -e JAVA_ENABLE_DEBUG="true" \
+    --device /dev/video0 \
+    --group-add keep-groups \
+    -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection/ \
+    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
 -----
-+
-NOTE:  Need to research link:https://www.redhat.com/sysadmin/files-devices-podman[this]
 
 . View RESTful API exposed by app:
 +
