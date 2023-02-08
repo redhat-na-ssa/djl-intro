@@ -60,6 +60,10 @@ ie: `dnf install maven`
 +
 ie: `dnf install curl`
 
+. *DJL_CACHE_DIR*
++
+DJL engines link:https://djl.ai/docs/development/cache_management.html[download models] and any needed C++ shared object files to a directory specified by the environment variable: `DJL_CACHE_DIR` .  You are encouraged to set this environment variable in your shell.  Otherwise, DJL will write these files to: `$HOME/.djl.ai`
+
 === Quarkus `dev mode`
 
 The application can be run locally in quarkus `dev mode` (which enables live coding).
@@ -115,6 +119,21 @@ If you want to push to quay.io, then authenticate as follows:
 $ podman login quay.io
 -----
 
+
+. To support link:https://github.com/deepjavalibrary/djl-serving/blob/master/serving/docs/configurations.md#djl-settings[off-line mode] of the DJL engines, a pre-seeded DJL cache will be mounted to the linux container.  With some engines using some models, temporary directories and/or json files might be generated in this DJL cache.  Subsequently, the DJL cache should be made writable by the container process:
++
+-----
+$ export DJL_CACHE_DIR=/u02/djl.ai \
+    && mkdir -p $DJL_CACHE_DIR
+
+$ sudo semanage fcontext -a \
+        -t container_file_t "$DJL_CACHE_DIR(/.*)?"
+
+$ sudo restorecon -R $DJL_CACHE_DIR
+
+$ podman unshare chown -R 185:185 $DJL_CACHE_DIR
+-----
+
 === Image Classification
 
 ==== Create Linux Container
@@ -152,17 +171,25 @@ $ djl_engine=pytorch
 +
 NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
 
+. Set environment variable indicating whether to run the DJL engine in offline mode:
++
+-----
+$ djl_offline=false
+-----
+
 . Run linux container using designated deep learning engine:
 +
 -----
 $ podman run \
-  -d \
-  --rm \
-  --name djl-iclass-$djl_engine \
-  -p 8080:8080 \
-  -p 5005:5005 \
-  -e JAVA_ENABLE_DEBUG="true" \
-  quay.io/redhat_naps_da/djl-iclassification-$djl_engine:0.0.3
+    --rm \
+    --name djl-iclass-$djl_engine \
+    -p 8080:8080 \
+    -p 5005:5005 \
+    -e JAVA_ENABLE_DEBUG="true" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
+    -e DJL_CACHE_DIR=/mnt/djl.ai \
+    -v $DJL_CACHE_DIR:/mnt/djl.ai:z \
+    quay.io/redhat_naps_da/djl-iclassification-$djl_engine:0.0.3
 -----
 
 . View RESTful API exposed by app:
@@ -204,6 +231,12 @@ $ djl_engine=pytorch
 +
 NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
 
+. Set environment variable indicating whether to run the DJL engine in offline mode:
++
+-----
+$ djl_offline=false
+-----
+
 . The `djl-objectdetection` container needs access to the host's video card.
 +
 Podman allows for that however you need to ensure that your host operating system user is a member of the `video` group:
@@ -227,21 +260,25 @@ $ sudo restorecon -R $I_DIR
 $ podman unshare chown -R 185:185 $I_DIR
 -----
 
+
 . Run linux container using designated deep learning engine:
 +
 NOTE: podman utility provides access to the host machine's video card as per link:https://www.redhat.com/sysadmin/files-devices-podman[this document]
 +
 -----
 $ podman run \
-    -d \
     --rm \
     --name djl-objectdetect-$djl_engine \
     -p 8080:8080 \
     -p 5005:5005 \
     -e JAVA_ENABLE_DEBUG="true" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
+    -e DJL_CACHE_DIR=/mnt/djl.ai \
+    -v $DJL_CACHE_DIR:/mnt/djl.ai:z \
     --device /dev/video0 \
     --group-add keep-groups \
-    -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection/ \
+    -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
+    -v ./djl-objectdetect/config/application.properties:/deployments/config/application.properties:z \
     quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
 -----
 
