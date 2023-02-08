@@ -24,6 +24,7 @@ import nu.pattern.OpenCV;
 
 import ai.djl.Application;
 import ai.djl.ModelException;
+import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
@@ -40,6 +41,10 @@ import java.awt.image.BufferedImage;
 @ApplicationScoped
 public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
+    private static final String PYTORCH="pytorch";
+    private static final String TENSORFLOW="tensorflow";
+    private static final String MXNET="mxnet";
+
     private static Logger log = Logger.getLogger("LiveObjectDetectionResource");
 
     @ConfigProperty(name = "org.acme.objectdetection.capture.duration.millis", defaultValue = "10000")
@@ -53,7 +58,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     ZooModel<Image, DetectedObjects> model;
     File fileDir;
-    
     
     public void startResource() {
         
@@ -143,7 +147,17 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             .setTypes(Image.class, DetectedObjects.class)
             .optProgress(new ProgressBar());
 
-        Map<String, String> filters = cFilters.filters();
+        String eType = Engine.getInstance().getDefaultEngineName();
+        Map<String, String> filters = null;
+        if(PYTORCH.equalsIgnoreCase(eType)) {
+            filters = cFilters.pytorch();
+        }else if(TENSORFLOW.equalsIgnoreCase(eType)){
+            filters = cFilters.tensorflow();
+        }else if(MXNET.equalsIgnoreCase(eType)) {
+            filters = cFilters.mxnet();
+        }else {
+            throw new RuntimeException("Unknown engine type: "+eType);
+        }
         for(Entry<String, String> eObj : filters.entrySet() ){
             builder = builder.optFilter(eObj.getKey(), eObj.getValue());
         }
