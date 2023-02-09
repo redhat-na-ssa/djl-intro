@@ -3,8 +3,13 @@ package org.acme.apps;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.awt.image.BufferedImage;
+import java.awt.Graphics;
 import java.io.InputStream;
 
 
@@ -15,6 +20,7 @@ import io.smallrye.mutiny.Uni;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import org.wildfly.common.flags.Flags;
 
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
@@ -23,10 +29,13 @@ import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects.DetectedObject;
+import ai.djl.modality.cv.transform.CenterCrop;
 import ai.djl.modality.cv.transform.Resize;
 import ai.djl.modality.cv.transform.ToTensor;
 import ai.djl.modality.cv.translator.ImageClassificationTranslator;
 import ai.djl.modality.cv.translator.ImageClassificationTranslator.Builder;
+import ai.djl.modality.cv.util.NDImageUtils;
+import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
@@ -35,6 +44,8 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.Batchifier;
 import ai.djl.translate.Pipeline;
+import ai.djl.translate.Translator;
+import ai.djl.translate.TranslatorContext;
 import ai.djl.translate.TranslateException;
 import ai.djl.util.PairList;
 
@@ -46,8 +57,7 @@ import org.apache.commons.imaging.Imaging;
 public class FingerprintResource extends BaseResource implements IApp {
 
     private static final String FINGERPRINT_IMAGE_URL = "https://github.com/redhat-na-ssa/demo-rosa-sagemaker/raw/main/serving/client/images/232__M_Right_index_finger.png";
-    private static final String FINGERPRINT_MODEL_PATH = "/home/jbride/Downloads/fingerprint/fingerprint/2";
-    private static final String FINGERPRINT_SYNSET_ARTIFACT_NAME = "fingerprint.pb";
+    private static final String FINGERPRINT_SYNSET_ARTIFACT_NAME = "saved_model.pb";
 
     private static final Logger log = Logger.getLogger("FingerprintResource");
     
@@ -56,7 +66,7 @@ public class FingerprintResource extends BaseResource implements IApp {
     
     private Image image;
 
-    @ConfigProperty(name = "org.acme.djl.fingerprint.model.path", defaultValue = FINGERPRINT_MODEL_PATH)
+    @ConfigProperty(name = "org.acme.djl.fingerprint.model.path")
     String modelPath;
 
     @ConfigProperty(name = "org.acme.djl.fingerprint.model.synset.artifact.name", defaultValue = FINGERPRINT_SYNSET_ARTIFACT_NAME)
@@ -67,44 +77,65 @@ public class FingerprintResource extends BaseResource implements IApp {
     public void startResource() {
 
         super.start();
-        log.info("startResource() image classification based on: "+ imageUrl);
         InputStream is = null;
         try {
 
-            URL url = new URL(imageUrl);
-            is = url.openStream();
-            BufferedImage bImage = Imaging.getBufferedImage(is);
+            Translator<Image, Classifications> cTranslator = new Translator<Image, Classifications>() {
 
-            // when ai.djl.opencv:opencv is on classpath;  this factory = ai.djl.opencv.OpenCVImageFactory
-            // otherwise, this factory                                  = ai.djl.modality.cv.BufferedImageFactory
-            ImageFactory iFactory = ImageFactory.getInstance();
-            log.info("ImageFactory = "+iFactory.getClass().getCanonicalName());
+                @Override
+                public NDList processInput(TranslatorContext ctx, Image input) {
+                    // Convert Image to NDArray
+                    NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.GRAYSCALE);
+                    Pipeline pipeline = new Pipeline();
+                    pipeline.add(new CenterCrop());
+                    pipeline.add(new ToTensor());
+                    NDList inList = null;
+                    inList = pipeline.transform(new NDList(array));
+                    log.infov("inList size = {0}", inList.size());
+                    return inList;
+                }
+            
+                @Override
+                public Classifications processOutput(TranslatorContext ctx, NDList list) {
+                    // Create a Classifications with the output probabilities
+                    for(NDArray ndA : list.getResourceNDArrays()) {
 
-            image = iFactory.fromImage(bImage); // Does this need to be transformed into a numpy array ???
+                        log.infov("NDArray prior to softmax = {0} {1}", ndA.toDebugString(true), ndA.getName());
+                    }
+                    NDArray probabilities = list.singletonOrThrow().softmax(0);
 
+                    for(NDArray ndA : probabilities.getResourceNDArrays()) {
 
-            Pipeline pipeline = new Pipeline();
-            pipeline.add(new ToTensor());
-            Builder tBuilder = ImageClassificationTranslator.builder()
-                .optApplySoftmax(true)
-                .optSynsetArtifactName(synsetArtificatName)
-                .setPipeline(pipeline)
-                .addTransform(new Resize(224, 224))
-                .addTransform(array -> array.div(127.5f).sub(1f));
-
-
+                        log.infov("probabilities = {0} {1}", ndA.toDebugString(true), ndA.getName());
+                    }
+                    
+                    List<String> classNames = new ArrayList<String>();
+                    classNames.add("LEFT");
+                    classNames.add("RIGHT");
+                    return new Classifications(classNames, probabilities);
+                }
+            
+                @Override
+                public Batchifier getBatchifier() {
+                    // The Batchifier describes how to combine a batch together
+                    // Stacking, the most common batchifier, takes N [X1, X2, ...] arrays to a single [N, X1, X2, ...] array
+                    return Batchifier.STACK;
+                }
+            };
+        
             Criteria<Image, Classifications> criteria = Criteria.builder()
-            .optApplication(Application.CV.IMAGE_CLASSIFICATION)
+                .optApplication(Application.CV.IMAGE_CLASSIFICATION)
+                .optProgress(new ProgressBar())
                 .setTypes(Image.class, Classifications.class) // defines input and output data type
                 .optModelPath(Paths.get(this.modelPath)) // search models in specified path
                 .optModelName("model") // specify model file prefix
-                .optTranslator(tBuilder.build())
-                .optProgress(new ProgressBar())
+                .optTranslator(cTranslator)
                 .build();
         
             model = criteria.loadModel();
             PairList<String, Shape> pListInput = model.describeInput();
             for(Entry<String, Shape> ePair : pListInput.toMap().entrySet()) {
+
                 Shape sObj = ePair.getValue();
                 log.infov("input epair = {0} , {1}", ePair.getKey(), sObj.toString());
             }
@@ -114,9 +145,30 @@ public class FingerprintResource extends BaseResource implements IApp {
                 log.infov("output epair = {0} , {1}", ePairO.getKey(), sObj.toString());
             }
 
+
+            log.info("startResource() image classification based on: "+ imageUrl);
+            URL url = new URL(imageUrl);
+            is = url.openStream();
+            BufferedImage origImage = Imaging.getBufferedImage(is);
+            BufferedImage resizedImage = new BufferedImage(96, 96, BufferedImage.TYPE_BYTE_GRAY);
+            Graphics graphics = resizedImage.createGraphics();
+            graphics.drawImage(origImage, 0, 0, 96,96, null);
+            graphics.dispose();
+
+            log.infov("Original image height, width:  {0} ; {1}", origImage.getHeight(), origImage.getWidth());
+            log.infov("Resized image height, width:  {0} ; {1}", resizedImage.getHeight(), resizedImage.getWidth());
+
+
+            // when ai.djl.opencv:opencv is on classpath;  this factory = ai.djl.opencv.OpenCVImageFactory
+            // otherwise, this factory                                  = ai.djl.modality.cv.BufferedImageFactory
+            ImageFactory iFactory = ImageFactory.getInstance();
+            
+            image = iFactory.fromImage(resizedImage); // Does this need to be transformed into a numpy array ???
+
         } catch (ImageReadException | ModelNotFoundException | MalformedModelException | IOException e) {
             throw new RuntimeException(e.getMessage());
         }finally {
+
             if(is != null)
                 try { is.close(); }catch(Exception x){ x.printStackTrace();}
         }
