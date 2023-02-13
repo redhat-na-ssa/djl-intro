@@ -420,6 +420,21 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
         -DplatformVersion=2.14.0.Final
 -----
 
+== Offline `fatjar'
+
+. link:https://github.com/deepjavalibrary/djl-demo/tree/master/development/fatjar[djl-demo fatjar] example
+
+. Create a quarkus based uber jar:
++
+-----
+$ ./mvnw clean package \
+    -P$djl_engine             
+    -Dquarkus.application.name=djl-objectdetect-$djl_engine \
+    -DskipTests -Dquarkus.package.type=uber-jar
+-----
++
+TO-DO: At runtime, DJL engines (mxnet, pytorch and tensorflow) do not detect presence of *.so libraries in the uber jar.  Subsequently, setting `offline=true` will terminate the app.
+
 == Questions
 
 . Compare link:https://djl.ai/docs/development/inference_performance_optimization.html[DJL threading/performance] with scalability link:https://developer.nvidia.com/nvidia-triton-inference-server#scalable-ai[claims] of NVIDIA Triton
