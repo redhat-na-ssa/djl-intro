@@ -12,11 +12,10 @@ import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
-import io.smallrye.config.ConfigMapping;
 import io.smallrye.mutiny.Uni;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
@@ -53,6 +52,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objecdetection.image.directory", defaultValue="/tmp/org.acme.objectdetection")
     String oDetectionDirString;
 
+    @ConfigProperty(name = "org.acme.objectdetection.video.capture.device.id", defaultValue = "0")
+    int videoCaptureDevice;
+
     @Inject
     CriteriaFilter cFilters;
 
@@ -61,18 +63,28 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     
     public void startResource() {
         
-        log.info("start()");
         super.start();
+        VideoCapture vCapture = null;
         try {
             
             model = loadModel();
-
+            
             fileDir = new File(oDetectionDirString);
             if(!fileDir.exists())
-                fileDir.mkdirs();
+            fileDir.mkdirs();
             
+            OpenCV.loadShared();  // Link org.opencv.* related JNI classes (as found in: opencv-4.5.1-2.jar )
+
+            vCapture = new VideoCapture(videoCaptureDevice);
+            if(!vCapture.isOpened())
+                throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice);
+                
+            log.infov("start() video capture device = {0} is open =  {1}", this.videoCaptureDevice, vCapture.isOpened() );
         }catch(Exception x){
             throw new RuntimeException(x);
+        }finally {
+            if(vCapture != null && vCapture.isOpened())
+                vCapture.release();
         }
         
     }
@@ -82,10 +94,8 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         VideoCapture vCapture = null;
         String rMessage = "Failed to capture image from WebCam";
         try{
-            predictor = model.newPredictor();
             
-            OpenCV.loadShared();
-            vCapture = new VideoCapture(0);
+            vCapture = new VideoCapture(videoCaptureDevice);
             if (!vCapture.isOpened()) {
                 throw new RuntimeException("No camera detected");
             }
@@ -115,6 +125,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             // Detect presence of object in webcam captured image and draw a box around that object
             ImageFactory factory = ImageFactory.getInstance();
             Image img = factory.fromImage(unboxedMat);
+            predictor = model.newPredictor();
             DetectedObjects detections = predictor.predict(img);
             img.drawBoundingBoxes(detections);
 

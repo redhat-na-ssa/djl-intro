@@ -1,5 +1,6 @@
 package org.acme;
 
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;

@@ -24,7 +24,7 @@ import io.smallrye.mutiny.Uni;
 
 public class BaseResource {
 
-    private static final Logger log = Logger.getLogger("ImageClassResource");
+    private static final Logger log = Logger.getLogger("BaseResource");
 
     private String engineName;
 
