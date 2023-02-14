@@ -295,6 +295,74 @@ $ podman run \
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
+=== Fingerprint Serving
+
+==== Create Linux Container
+
+. Change directory into:  `djl-fprint`
+
+. Set an environment variable that specifies one of the possible deep learning engines:
++
+-----
+$ djl_engine=tensorflow
+-----
++
+NOTE:  The model (and subsequently the engine) is Tensorflow specific
+
+. Set an environment variable that specifies the processor type:
++
+-----
+$ djl_processor=gpu
+-----
++
+NOTE: Options are:  `cpu` and `gpu`
+
+. Build container and generate openshift/helm configs:
++
+-----
+$ cp config/kube/openshift-$djl_processor.yml src/main/kubernetes/openshift.yml \
+  && ./mvnw clean package \
+        -P$djl_engine-$djl_processor \
+        -Dquarkus.application.name=djl-fprint-$djl_engine-$djl_processor \
+        -DskipTests \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true
+-----
+
+==== Execution
+
+. Set path to model path on local filesystem:
++
+-----
+$ djl_model_dir=$HOME/Downloads/fingerprint/fingerprint/1
+-----
++
+NOTE:  Model can be downloaded link:https://github.com/redhat-na-ssa/demo-datasci-fingerprint-data[here].
+
+. Set environment variable indicating whether to run the DJL engine in offline mode:
++
+-----
+$ djl_offline=true
+-----
+
+. Run linux container using designated deep learning engine:
++
+-----
+$ podman run \
+    --rm \
+    --name djl-fprint-$djl_engine-$djl_processor \
+    -p 8080:8080 \
+    -p 5005:5005 \
+    -e JAVA_ENABLE_DEBUG="true" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
+    -v $djl_model_dir:/mnt/model:z \
+    quay.io/redhat_naps_da/djl-fprint-$djl_engine-$djl_processor:0.0.1
+-----
+
+. View RESTful API exposed by app:
++
+Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
+
 == OpenShift
 
 === Pre-reqs
@@ -429,7 +497,11 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
         -DplatformVersion=2.14.0.Final
 -----
 
-== Offline `fatjar'
+== `fatjar`
+
+DJL and Quarkus allow the ability to create a _fat_ jar (aka: _uber-jar).
+Not sure this adds much value in off-line mode.
+*-native dependencies specified in pom.xml provide the C++ *.so files and are extracted to $DJL_CACHE_DIR
 
 === Reference
 . link:https://github.com/deepjavalibrary/djl-demo/tree/master/development/fatjar[djl-demo fatjar] example

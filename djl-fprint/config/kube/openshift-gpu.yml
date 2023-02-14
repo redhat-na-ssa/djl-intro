@@ -1,0 +1,25 @@
+---
+
+# The reason this file exists is because adding the following limit/request is not possible via kubernetes quarkus properties in src/main/resource/application.properties:
+#   nvidia.com/gpu: "1"
+ 
+# Related documentation: https://quarkus.io/guides/deploying-to-kubernetes#using-existing-resources
+
+
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: djl-fprint-tensorflow-gpu
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: djl-fprint-tensorflow-gpu
+    spec:
+      containers:
+        - name: djl-fprint-tensorflow-gpu
+          resources:
+            limits:
+              nvidia.com/gpu: '1'
+            requests:
+              nvidia.com/gpu: '1'

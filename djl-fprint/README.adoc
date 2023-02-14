@@ -1,4 +1,4 @@
-= djl-fingerprint-serving Project
+= djl-fprint Project
 
 -----
 $ python3 -m venv venv

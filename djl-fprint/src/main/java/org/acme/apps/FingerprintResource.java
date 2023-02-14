@@ -6,12 +6,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics;
 import java.io.InputStream;
-
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.Response;
@@ -20,7 +17,6 @@ import io.smallrye.mutiny.Uni;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.wildfly.common.flags.Flags;
 
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
@@ -28,13 +24,8 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.DetectedObjects.DetectedObject;
 import ai.djl.modality.cv.transform.CenterCrop;
-import ai.djl.modality.cv.transform.Resize;
 import ai.djl.modality.cv.transform.ToTensor;
-import ai.djl.modality.cv.translator.ImageClassificationTranslator;
-import ai.djl.modality.cv.translator.ImageClassificationTranslator.Builder;
-import ai.djl.modality.cv.util.NDImageUtils;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.types.Shape;
@@ -91,7 +82,7 @@ public class FingerprintResource extends BaseResource implements IApp {
                     pipeline.add(new ToTensor());
                     NDList inList = null;
                     inList = pipeline.transform(new NDList(array));
-                    log.infov("inList size = {0}", inList.size());
+                    log.debugv("inList size = {0}", inList.size());
                     return inList;
                 }
             
@@ -100,13 +91,13 @@ public class FingerprintResource extends BaseResource implements IApp {
                     // Create a Classifications with the output probabilities
                     for(NDArray ndA : list.getResourceNDArrays()) {
 
-                        log.infov("NDArray prior to softmax = {0} {1}", ndA.toDebugString(true), ndA.getName());
+                        log.debugv("NDArray prior to softmax = {0} {1}", ndA.toDebugString(true), ndA.getName());
                     }
                     NDArray probabilities = list.singletonOrThrow().softmax(0);
 
                     for(NDArray ndA : probabilities.getResourceNDArrays()) {
 
-                        log.infov("probabilities = {0} {1}", ndA.toDebugString(true), ndA.getName());
+                        log.debugv("probabilities = {0} {1}", ndA.toDebugString(true), ndA.getName());
                     }
                     
                     List<String> classNames = new ArrayList<String>();
@@ -137,12 +128,12 @@ public class FingerprintResource extends BaseResource implements IApp {
             for(Entry<String, Shape> ePair : pListInput.toMap().entrySet()) {
 
                 Shape sObj = ePair.getValue();
-                log.infov("input epair = {0} , {1}", ePair.getKey(), sObj.toString());
+                log.debugv("input epair = {0} , {1}", ePair.getKey(), sObj.toString());
             }
             PairList<String, Shape> pListOutput = model.describeOutput();
             for(Entry<String, Shape> ePairO : pListOutput.toMap().entrySet()) {
                 Shape sObj = ePairO.getValue();
-                log.infov("output epair = {0} , {1}", ePairO.getKey(), sObj.toString());
+                log.debugv("output epair = {0} , {1}", ePairO.getKey(), sObj.toString());
             }
 
 
@@ -155,8 +146,8 @@ public class FingerprintResource extends BaseResource implements IApp {
             graphics.drawImage(origImage, 0, 0, 96,96, null);
             graphics.dispose();
 
-            log.infov("Original image height, width:  {0} ; {1}", origImage.getHeight(), origImage.getWidth());
-            log.infov("Resized image height, width:  {0} ; {1}", resizedImage.getHeight(), resizedImage.getWidth());
+            log.debugv("Original image height, width:  {0} ; {1}", origImage.getHeight(), origImage.getWidth());
+            log.debugv("Resized image height, width:  {0} ; {1}", resizedImage.getHeight(), resizedImage.getWidth());
 
 
             // when ai.djl.opencv:opencv is on classpath;  this factory = ai.djl.opencv.OpenCVImageFactory
