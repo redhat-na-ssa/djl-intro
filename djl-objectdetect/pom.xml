@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.acme</groupId>
   <artifactId>djl-objectdetect</artifactId>
@@ -20,14 +22,14 @@
   <dependencyManagement>
     <dependencies>
 
-        <!-- https://mvnrepository.com/artifact/ai.djl/bom/0.20.0 -->
-        <dependency>
-            <groupId>ai.djl</groupId>
-            <artifactId>bom</artifactId>
-            <version>${djl.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
+      <!-- https://mvnrepository.com/artifact/ai.djl/bom/0.20.0 -->
+      <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>bom</artifactId>
+        <version>${djl.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
 
 
       <dependency>
@@ -169,117 +171,117 @@
       </properties>
     </profile>
 
-        <profile>
-            <id>pytorch</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>ai.djl.pytorch</groupId>
-                    <artifactId>pytorch-model-zoo</artifactId>
-                     <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.pytorch</groupId>
-                    <artifactId>pytorch-engine</artifactId>
-                     <scope>runtime</scope>
-                </dependency>
+    <profile>
+      <id>pytorch</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-model-zoo</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-engine</artifactId>
+          <scope>runtime</scope>
+        </dependency>
 
-                 <dependency>
-                     <groupId>ai.djl.pytorch</groupId>
-                     <artifactId>pytorch-jni</artifactId>
-                     <scope>runtime</scope>
-                 </dependency>
-                 <dependency>
-                     <groupId>ai.djl.pytorch</groupId>
-                     <artifactId>pytorch-native-cpu</artifactId>
-                     <classifier>linux-x86_64</classifier>
-                     <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-jni</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-native-cpu</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
 
-        <profile>
+    <profile>
 
-            <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
-            <id>mxnet</id>
+      <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
+      <id>mxnet</id>
 
-            <dependencies>
-                <dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-model-zoo</artifactId>
-                </dependency>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-model-zoo</artifactId>
+        </dependency>
 
-                <!-- Use when building for CPU -->
-                <dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-native-mkl</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                </dependency>
+        <!-- Use when building for CPU -->
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-native-mkl</artifactId>
+          <classifier>linux-x86_64</classifier>
+        </dependency>
 
-                <!-- Use when building for GPU -->
-                <!-- dependency>
-                    <groupId>ai.djl.mxnet</groupId>
-                    <artifactId>mxnet-native-cu112mkl</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                </dependency -->
+        <!-- Use when building for GPU -->
+        <!-- dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-native-cu112mkl</artifactId>
+          <classifier>linux-x86_64</classifier>
+        </dependency -->
 
-            </dependencies>
-        </profile>
+      </dependencies>
+    </profile>
 
-        <profile>
-            <id>tensorflow</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>javacpp</artifactId>
-                    <!-- Only 1.5.4 works with GraalVM -->
-                    <version>1.5.4</version>
-                     <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>javacpp</artifactId>
-                    <version>1.5.4</version>
-                    <classifier>linux-x86_64</classifier>
-                     <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-                    <!-- Why this get downgraded to 3.6.1 by default? -->
-                    <version>3.16.3</version>
-                     <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-model-zoo</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-engine</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
+    <profile>
+      <id>tensorflow</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.bytedeco</groupId>
+          <artifactId>javacpp</artifactId>
+          <!-- Only 1.5.4 works with GraalVM -->
+          <version>1.5.4</version>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.bytedeco</groupId>
+          <artifactId>javacpp</artifactId>
+          <version>1.5.4</version>
+          <classifier>linux-x86_64</classifier>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+          <!-- Why this get downgraded to 3.6.1 by default? -->
+          <version>3.16.3</version>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-model-zoo</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-engine</artifactId>
+          <scope>runtime</scope>
+        </dependency>
 
-                <!-- Use when building for CPU -->
-                <dependency>
-                    <groupId>ai.djl.tensorflow</groupId>
-                    <artifactId>tensorflow-native-cpu</artifactId>
-                    <classifier>linux-x86_64</classifier>
-                     <scope>runtime</scope>
-                </dependency>
+        <!-- Use when building for CPU -->
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-native-cpu</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <scope>runtime</scope>
+        </dependency>
 
-                <!-- Use when building for GPU -->
-                <!-- dependency>
+        <!-- Use when building for GPU -->
+        <!-- dependency>
                     <groupId>ai.djl.tensorflow</groupId>
                     <artifactId>tensorflow-native-cu113</artifactId>
                     <classifier>linux-x86_64</classifier>
                      <scope>runtime</scope>
                 </dependency -->
-            </dependencies>
-        </profile>
+      </dependencies>
+    </profile>
 
   </profiles>
 </project>
