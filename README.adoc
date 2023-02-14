@@ -62,7 +62,9 @@ ie: `dnf install curl`
 
 . *DJL_CACHE_DIR*
 +
-DJL engines link:https://djl.ai/docs/development/cache_management.html[download models] and any needed C++ shared object files to a directory specified by the environment variable: `DJL_CACHE_DIR` .  You are encouraged to set this environment variable in your shell.  Otherwise, DJL will write these files to: `$HOME/.djl.ai`
+DJL engines link:https://djl.ai/docs/development/cache_management.html[download models] and any needed C++ shared object files to a directory specified by the environment variable: `DJL_CACHE_DIR` .  
+You are encouraged to set this environment variable in your shell.  
+Otherwise, DJL will write these files to: `$HOME/.djl.ai`
 
 === Quarkus `dev mode`
 
@@ -120,7 +122,14 @@ $ podman login quay.io
 -----
 
 
-. To support link:https://github.com/deepjavalibrary/djl-serving/blob/master/serving/docs/configurations.md#djl-settings[off-line mode] of the DJL engines, a pre-seeded DJL cache will be mounted to the linux container.  With some engines using some models, temporary directories and/or json files might be generated in this DJL cache.  Subsequently, the DJL cache should be made writable by the container process:
+. To support link:https://github.com/deepjavalibrary/djl-serving/blob/master/serving/docs/configurations.md#djl-settings[off-line mode] of the DJL engines, a pre-seeded DJL cache will be mounted to the linux container.  
+emporary directories and/or json files might be generated in this DJL cache.  
+This DJL cache directory should be made writable by the container process for the following reasons:
+
+.. Extraction of native C++ libraries included in DJL `fatjar` to $DJL_CACHE_DIR
+.. Downloading of any models from DJL's ModelZoo that may be used by the application.
+
+. Make $DJL_CACHE_DIR writable for container process:
 +
 -----
 $ export DJL_CACHE_DIR=/u02/djl.ai \
@@ -422,18 +431,56 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
 
 == Offline `fatjar'
 
+=== Reference
 . link:https://github.com/deepjavalibrary/djl-demo/tree/master/development/fatjar[djl-demo fatjar] example
+
+=== Procedure
+
+. Configure project `pom.xml` such that the dependency that provides the engine's native C++ shared object files matches the target environment where execution will occur.  ie: for mxnet on a CPU environment, the dependency needs to be:
++
+-----
+        <dependency>
+            <groupId>ai.djl.mxnet</groupId>
+            <artifactId>mxnet-native-mkl</artifactId>
+            <classifier>linux-x86_64</classifier>
+        </dependency>
+-----
 
 . Create a quarkus based uber jar:
 +
 -----
 $ ./mvnw clean package \
-    -P$djl_engine             
+    -P$djl_engine \
     -Dquarkus.application.name=djl-objectdetect-$djl_engine \
     -DskipTests -Dquarkus.package.type=uber-jar
 -----
+
+. Execute uber jar and test in `offline` mode:
+
+.. Turn off internet to host machine
+
+.. Execute
 +
-TO-DO: At runtime, DJL engines (mxnet, pytorch and tensorflow) do not detect presence of *.so libraries in the uber jar.  Subsequently, setting `offline=true` will terminate the app.
+-----
+$ java -Doffline=true -jar target/djl-objectdetect-0.0.1-runner.jar
+-----
++
+You should see log entries similar to the following pertaining to the engine's native libs:
++
+-----
+04:55:45 INFO  [ai.dj.py.jn.LibUtils] (main) Extracting pytorch/cpu/linux-x86_64/libc10.so to cache ...
+04:55:45 INFO  [ai.dj.py.jn.LibUtils] (main) Extracting pytorch/cpu/linux-x86_64/libgomp-52f2fd74.so.1 to cache ...
+04:55:45 INFO  [ai.dj.py.jn.LibUtils] (main) Extracting pytorch/cpu/linux-x86_64/libtorch.so to cache ...
+04:55:45 INFO  [ai.dj.py.jn.LibUtils] (main) Extracting pytorch/cpu/linux-x86_64/libtorch_cpu.so to cache ...
+04:55:46 DEBUG [ai.dj.py.jn.LibUtils] (main) Loading native library: /home/jbride/.djl.ai/pytorch/1.13.0-20221116-cpu-linux-x86_64/libgomp-52f2fd74.so.1
+04:55:46 DEBUG [ai.dj.py.jn.LibUtils] (main) Loading native library: /home/jbride/.djl.ai/pytorch/1.13.0-20221116-cpu-linux-x86_64/libc10.so
+04:55:46 DEBUG [ai.dj.py.jn.LibUtils] (main) Loading native library: /home/jbride/.djl.ai/pytorch/1.13.0-20221116-cpu-linux-x86_64/libtorch_cpu.so
+04:55:47 DEBUG [ai.dj.py.jn.LibUtils] (main) Loading native library: /home/jbride/.djl.ai/pytorch/1.13.0-20221116-cpu-linux-x86_64/libtorch.so
+04:55:47 INFO  [ai.dj.py.jn.LibUtils] (main) Extracting jnilib/linux-x86_64/cpu/libdjl_torch.so to cache ...
+04:55:47 DEBUG [ai.dj.py.jn.LibUtils] (main) Loading native library: /home/jbride/.djl.ai/pytorch/1.13.0-20221116-cpu-linux-x86_64/0.20.0-libdjl_torch.so
+-----
++
+Notice that native shared libraries packaged in the uber jar are extracted to $DJL_CACHE_DIR (or $HOME/.djl.ai if $DJL_CACHE_DIR is not set)
 
 == Questions
 
