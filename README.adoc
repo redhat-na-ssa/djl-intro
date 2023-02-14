@@ -287,7 +287,7 @@ $ podman run \
     --device /dev/video0 \
     --group-add keep-groups \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
-    -v ./djl-objectdetect/config/application.properties:/deployments/config/application.properties:z \
+    -v ./config/application.properties:/deployments/config/application.properties:z \
     quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
 -----
 
@@ -436,7 +436,7 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
 
 === Procedure
 
-. Configure project `pom.xml` such that the dependency that provides the engine's native C++ shared object files matches the target environment where execution will occur.  ie: for mxnet on a CPU environment, the dependency needs to be:
+. Configure project `pom.xml` such that the dependency that provides the engine's native C++ shared object files matches the target environment where execution will occur.  ie: for mxnet on a CPU environment running linux, the dependency needs to be:
 +
 -----
         <dependency>
@@ -452,14 +452,19 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
 $ ./mvnw clean package \
     -P$djl_engine \
     -Dquarkus.application.name=djl-objectdetect-$djl_engine \
-    -DskipTests -Dquarkus.package.type=uber-jar
+    -DskipTests \
+    -Dquarkus.package.type=uber-jar \
+    -Dquarkus.container-image.build=true \
+    -Dquarkus.container-image.builder=jib
 -----
 
 . Execute uber jar and test in `offline` mode:
 
 .. Turn off internet to host machine
 
-.. Execute
+.. Execute:
+
+.. JVM:
 +
 -----
 $ java -Doffline=true -jar target/djl-objectdetect-0.0.1-runner.jar
@@ -481,6 +486,25 @@ You should see log entries similar to the following pertaining to the engine's n
 -----
 +
 Notice that native shared libraries packaged in the uber jar are extracted to $DJL_CACHE_DIR (or $HOME/.djl.ai if $DJL_CACHE_DIR is not set)
+
+.. linux container:
++
+NOTE: podman utility provides access to the host machine's video card as per link:https://www.redhat.com/sysadmin/files-devices-podman[this document]
++
+-----
+$ podman run \
+    --rm \
+    --name djl-objectdetect-$djl_engine \
+    -p 8080:8080 \
+    -p 5005:5005 \
+    -e JAVA_ENABLE_DEBUG="true" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
+    --device /dev/video0 \
+    --group-add keep-groups \
+    -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
+    -v ./config/application.properties:/deployments/config/application.properties:z \
+    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
+-----
 
 == Questions
 
