@@ -1,0 +1,35 @@
+# djl-modelmanager Project
+
+-----
+$ ./mvnw clean package \
+    -DskipTests \
+    -Dquarkus.container-image.build=true
+-----
+
+-----
+$ podman push quay.io/redhat_naps_da/djl-modelmanager:0.0.1
+-----
+
+. Set path to model path on local filesystem:
++
+-----
+$ djl_model_dir=$HOME/Downloads/fingerprint/fingerprint/1
+-----
++
+NOTE:  Model can be downloaded link:https://github.com/redhat-na-ssa/demo-datasci-fingerprint-data[here].
+
+-----
+$ podman run \
+    --rm \
+    --name djl-modelmanager \
+    -p 8080:8080 \
+    -p 5005:5005 \
+    -e JAVA_ENABLE_DEBUG="true" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager" \
+    -v $djl_model_dir:/mnt/model:z \
+    quay.io/redhat_naps_da/djl-modelmanager:0.0.1
+-----
+
+-----
+$ curl -X GET localhost:8080/model-manager/rootFiles
+-----
