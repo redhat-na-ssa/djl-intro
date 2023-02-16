@@ -1,7 +1,11 @@
 package org.acme.apps;
 
+import java.io.File;
+
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +52,7 @@ import org.apache.commons.imaging.Imaging;
 public class FingerprintResource extends BaseResource implements IApp {
 
     private static final String FINGERPRINT_IMAGE_URL = "https://github.com/redhat-na-ssa/demo-rosa-sagemaker/raw/main/serving/client/images/232__M_Right_index_finger.png";
-    private static final String FINGERPRINT_SYNSET_ARTIFACT_NAME = "saved_model.pb";
+    private static final String FINGERPRINT_MODEL_ARTIFACT_PREFIX = "model";
 
     private static final Logger log = Logger.getLogger("FingerprintResource");
     
@@ -57,17 +61,32 @@ public class FingerprintResource extends BaseResource implements IApp {
     
     private Image image;
 
-    @ConfigProperty(name = "org.acme.djl.fingerprint.model.path")
-    String modelPath;
+    @ConfigProperty(name = "org.acme.djl.root.model.path")
+    String rootModelPathString;
 
-    @ConfigProperty(name = "org.acme.djl.fingerprint.model.synset.artifact.name", defaultValue = FINGERPRINT_SYNSET_ARTIFACT_NAME)
-    String synsetArtificatName;
+    @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.prefix", defaultValue = FINGERPRINT_MODEL_ARTIFACT_PREFIX)
+    String modelPrefix;
     
     ZooModel<Image, Classifications> model;
 
     public void startResource() {
 
         super.start();
+
+        File rootModelPath = new File(rootModelPathString);
+        if(!rootModelPath.exists() || !rootModelPath.isDirectory())
+            throw new RuntimeException("Following root directory does not exist: "+rootModelPathString);
+
+        String modelPathString = modelPrefix+".savedmodel";
+        File modelPath = new File(rootModelPath, modelPathString);
+        if(!modelPath.exists() || !modelPath.isDirectory())
+            throw new RuntimeException("Following model path directory does not exist: "+modelPathString);
+        else
+            log.infov("model found!   {0}, # of model files = {1}", modelPath.getAbsoluteFile().getAbsolutePath(), modelPath.listFiles().length);
+
+        Path nioModelPath = this.findModelDir(rootModelPath.toPath(), modelPathString);
+        log.infov("nioModelPath = {0}", nioModelPath);
+
         InputStream is = null;
         try {
 
@@ -118,8 +137,8 @@ public class FingerprintResource extends BaseResource implements IApp {
                 .optApplication(Application.CV.IMAGE_CLASSIFICATION)
                 .optProgress(new ProgressBar())
                 .setTypes(Image.class, Classifications.class) // defines input and output data type
-                .optModelPath(Paths.get(this.modelPath)) // search models in specified path
-                .optModelName("model") // specify model file prefix
+                .optModelPath(Paths.get(this.rootModelPathString)) // search models in specified path
+                .optModelName(modelPathString) // specify model file directory
                 .optTranslator(cTranslator)
                 .build();
         
@@ -157,6 +176,7 @@ public class FingerprintResource extends BaseResource implements IApp {
             image = iFactory.fromImage(resizedImage); // Does this need to be transformed into a numpy array ???
 
         } catch (ImageReadException | ModelNotFoundException | MalformedModelException | IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }finally {
 
@@ -164,6 +184,22 @@ public class FingerprintResource extends BaseResource implements IApp {
                 try { is.close(); }catch(Exception x){ x.printStackTrace();}
         }
 
+    }
+
+    private Path findModelDir(Path modelDir, String prefix) {
+        Path path = modelDir.resolve(prefix);
+        if (!Files.exists(path)) {
+            return null;
+        }
+        if (Files.isRegularFile(path)) {
+            return modelDir;
+        } else if (Files.isDirectory(path)) {
+            Path file = path.resolve("saved_model.pb");
+            if (Files.exists(file) && Files.isRegularFile(file)) {
+                return path;
+            }
+        }
+        return null;
     }
 
     public Uni<Response> predict() {
