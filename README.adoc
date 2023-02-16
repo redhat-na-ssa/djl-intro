@@ -246,6 +246,12 @@ NOTE:  Possible options are:  *pytorch*, *mxnet*, or *tensorflow*
 $ djl_offline=false
 -----
 
+. Specify the video card to capture from:
++
+-----
+$ djl_video=0
+-----
+
 . The `djl-objectdetection` container needs access to the host's video card.
 +
 Podman allows for that however you need to ensure that your host operating system user is a member of the `video` group:
@@ -281,10 +287,10 @@ $ podman run \
     -p 8080:8080 \
     -p 5005:5005 \
     -e JAVA_ENABLE_DEBUG="true" \
-    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline -Dorg.acme.objectdetection.video.capture.device.id=$djl_video" \
     -e DJL_CACHE_DIR=/mnt/djl.ai \
     -v $DJL_CACHE_DIR:/mnt/djl.ai:z \
-    --device /dev/video0 \
+    --device /dev/video$djl_video \
     --group-add keep-groups \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
     -v ./config/application.properties:/deployments/config/application.properties:z \
