@@ -1,0 +1,82 @@
+---
+
+kind: List
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: {{ ldap_service_name }}
+      expose: "true"
+    name: {{ ldap_service_name }}
+  spec:
+    ports:
+      - name: ldap
+        port: 389
+        protocol: TCP
+        targetPort: 389
+    selector:
+      deployment: {{ application_name }}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    generation: 1
+    labels:
+      app: {{ application_name }}
+    name: {{ application_name }}
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        deployment: {{ application_name }}
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          deployment: {{ application_name }}
+      spec:
+        containers:
+        - args:
+          - --copy-service
+          image: docker.io/osixia/openldap:1.5.0
+          imagePullPolicy: IfNotPresent
+          name: {{ application_name }}
+          ports:
+          - containerPort: 389
+            protocol: TCP
+          - containerPort: 636
+            protocol: TCP
+          resources: {}
+          securityContext:
+            capabilities:
+              drop:
+              - MKNOD
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - name: users
+            mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom/{{ users_seed_ldif }}
+            subPath: {{ users_seed_ldif }}
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        serviceAccount: {{ application_name }}
+        serviceAccountName: {{ application_name }}
+        volumes:
+        - configMap:
+            name: {{ application_name }}
+          name: users
+

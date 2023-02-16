@@ -1,0 +1,69 @@
+---
+
+#############    General    #######################
+home_dir: "{{ playbook_dir }}/.."
+
+# resources dir
+resources_base_dir: "{{ home_dir }}/resources"
+
+# oc executable
+openshift_cli: oc
+
+# The OCP user that will own all resources in the generated OCP namespace
+project_admin: user1
+
+project_annotations:
+
+#################################################
+
+
+#############    LDAP    #######################
+
+ldap_service_name: ldap-service
+ldap_app_name: ldap
+
+namespace_ldap: rhi-idm
+ldap_connection_url: "ldap://{{ ldap_service_name }}:389"
+ldap_bind_dn: cn=admin,dc=example,dc=org
+ldap_bind_credential: admin
+#################################################
+
+
+
+##############      SSO   #######################
+
+sso_name: rhsso
+
+# Namespace where SSO will be installed
+namespace_sso: rhi-idm
+
+# Name of Postgresql resources that support keycloak
+sso_db_name: sso
+sso_db_service_name: "{{ sso_db_name }}-psql"
+
+# If set to True, then every user that creates an account in demo will automatically be a realm-admin
+set_realm_admin_as_default: false
+
+sso_realm_id: "{{ project_admin }}-kc-demo"
+
+tinspect_sso_clientId: t-inspect
+
+zync_sso_client_name: zyncsso
+zync_sso_client_secret: zyncsso
+#################################################
+
+
+
+
+#########     services    ##############
+# Name of the OCP project to deploy this application to
+project_name: "{{ project_admin }}-djl"
+
+djl_modelmanager_name: djl-modelmanager
+djl_root_model_path: 
+
+djl_fprint_app_name: djl-fprint
+djl_fprint_url: "http://{{ djl_fprint_app_name }}.{{ project_name }}:8080"
+
+
+#########################################

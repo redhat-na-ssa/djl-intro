@@ -1,0 +1,44 @@
+---
+
+- name: "create service account {{ application_name }} in {{ namespace_ldap }}"
+  k8s:
+    state: present
+    kind: ServiceAccount
+    name: "{{ application_name }}"
+    namespace: "{{ namespace_ldap }}"
+
+- name: "OpenLDPA container needs to run as root; subsequently provide anyuid privledges"
+  shell: "oc adm policy add-scc-to-user anyuid -z {{ application_name }} -n {{ namespace_ldap }}"
+
+- name: "template {{ users_seed_ldif }}"
+  slurp:
+    src: "{{ role_path }}/templates/{{ users_seed_ldif }}"
+  register: ldif
+
+- name: create {{ application_name }} configmap
+  k8s:
+    state: present
+    namespace: "{{ namespace_ldap }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ application_name }}"
+      data:
+        ldap-example-users-2.ldif: "{{ ldif.content | b64decode }}"
+
+
+- name: "deploy ldap in {{ namespace_ldap }}"
+  k8s:
+    state: present
+    kind: Deployment
+    definition: "{{ lookup('template', 'templates/ldap_app.yml') | from_yaml }}"
+    namespace: "{{ namespace_ldap }}"
+
+- name: "wait until ldap deployment is active in {{ namespace_ldap }}"
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: "ldap"
+    namespace: "{{ namespace_ldap }}"
+    wait_sleep: 10
+    wait_timeout: 90

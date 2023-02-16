@@ -1,0 +1,18 @@
+---
+
+- name: "deploy {{ application_name }} application using following helm chart {{ helm_tar_url }}"
+  kubernetes.core.helm:
+    name: "{{ application_name }}"
+    release_namespace: "{{ namespace }}"
+    chart_ref: "{{ helm_tar_url }}"
+    wait: True
+
+- name: "wait until {{ application_name }} application is up and running"
+  shell: "{{ openshift_cli }} get dc {{ application_name }} -o template --template={{ json_template }} -n {{ namespace }}"
+  vars:
+    json_template: '\{\{.status.readyReplicas\}\}'
+  register: result
+  until: result.stdout == "1"
+  retries: 10
+  delay: 30
+  changed_when: false

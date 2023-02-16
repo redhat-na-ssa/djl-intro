@@ -1,0 +1,26 @@
+---
+
+- name: create {{ application_name }} PVC 
+  kubernetes.core.k8s:
+    state: present
+    kind: PersistentVolumeClaim
+    definition: "{{ lookup('template', 'templates/model_pvc.yml') | from_yaml }}"
+    namespace: "{{ namespace }}"
+
+- set_fact:
+    aprops: "{{ lookup('template', 'templates/application.properties')  }}"
+
+- name: create {{ application_configmap }} application configmap
+  k8s:
+    state: present
+    name: "{{ application_configmap }}"
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ application_configmap }}"
+      data:
+        application.properties: "{{ aprops }}"
+
+# - import_tasks: deploy_from_image.yml
