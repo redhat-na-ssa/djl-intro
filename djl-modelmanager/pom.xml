@@ -63,7 +63,7 @@
 
     
     <!--
-        $ helm install frontend-oidc ./target/helm/openshift/djl-modelmanager          :   deploy helm configured artifacts to OCP
+        $ helm install djl-modelmanager ./target/helm/openshift/djl-modelmanager          :   deploy helm configured artifacts to OCP
     -->
     <dependency>
         <groupId>io.quarkiverse.helm</groupId>

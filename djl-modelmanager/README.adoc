@@ -31,5 +31,12 @@ $ podman run \
 -----
 
 -----
+$ oc cp \
+        ~/Downloads/fingerprint/fingerprint/1/model.savedmodel/ \
+        djl-modelmanager-1-5nfjc:/mnt/model/model.savedmodel
+-----
+
+-----
 $ curl -X GET localhost:8080/model-manager/rootFiles
 -----
+
