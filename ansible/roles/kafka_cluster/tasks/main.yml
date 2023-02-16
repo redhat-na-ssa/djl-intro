@@ -1,0 +1,16 @@
+---
+
+- name: "create {{ kafka_cluster }} kafka cluster"
+  kubernetes.core.k8s:
+    state: present
+    kind: Kafka
+    definition: "{{ lookup('template', 'templates/' + kafka_template ) | from_yaml }}"
+    namespace: "{{ namespace }}"
+
+- name: "wait until kafka-cluster-entity-operator is active in {{ namespace }}"
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: "kafka-cluster-entity-operator"
+    namespace: "{{ namespace }}"
+    wait_sleep: 10
+    wait_timeout: 90

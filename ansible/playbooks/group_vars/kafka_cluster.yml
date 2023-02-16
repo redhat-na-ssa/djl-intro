@@ -1,0 +1,13 @@
+---
+
+namespace_amq_streams_operator: "openshift-operators"
+namespace_kafka_cluster: "{{ project_name }}"
+
+kafka_cluster: djl-cluster
+
+kafka_topics: >
+  [{"name": "{{ djl_fprint_prediction_event_topic }}", "partitions": "25", "replicas": "3", "config": '{"cleanup.policy": "compact"}'}]
+
+kafka_bootstrap_service: "{{ kafka_cluster }}-kafka-bootstrap.{{ namespace_kafka_cluster }}.svc"
+kafka_bootstrap_port: 9092
+kafka_bootstrap_address: "{{ kafka_bootstrap_service }}:{{ kafka_bootstrap_port }}"

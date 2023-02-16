@@ -1,0 +1,28 @@
+---
+
+- name: create imagestream {{ application_name }} in the {{ namespace }} project
+  kubernetes.core.k8s:
+    state: present
+    kind: ImageStream
+    definition: "{{ lookup('template', 'templates/' + binary_imagestream_template) | from_yaml }}"
+    namespace: "{{ namespace }}"
+
+# NOTE:  Might be subject to the following error:
+#   Internal error occurred: docker.io/obsidiandynamics/kafdrop:3.8.1: toomanyrequests: You have reached your pull rate limit. 
+#   You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+- name: deploy {{ application_name }} application
+  kubernetes.core.k8s:
+    state: present
+    kind: DeploymentConfig
+    definition: "{{ lookup('template', 'templates/' + kafdrop_application_template ) | from_yaml }}"
+    namespace: "{{ namespace }}"
+
+- name: "wait until {{ application_name }} application is up and running in {{ namespace }}"
+  shell: "{{ openshift_cli }} get dc {{ application_name }} -o template --template={{ json_template }} -n {{ namespace }}"
+  vars:
+    json_template: '\{\{.status.readyReplicas\}\}'
+  register: result
+  until: result.stdout == "1"
+  retries: 10
+  delay: 30
+  changed_when: false

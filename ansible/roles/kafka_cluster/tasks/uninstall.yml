@@ -1,0 +1,9 @@
+---
+
+- name: remove kafka {{ kafka_cluster }}
+  kubernetes.core.k8s:
+    state: absent
+    name: "{{ kafka_cluster }}"
+    kind: kafka
+    api_version: kafka.strimzi.io/v1beta2
+    namespace: "{{ namespace }}"

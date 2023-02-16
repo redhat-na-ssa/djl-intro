@@ -1,0 +1,20 @@
+---
+
+- name: list kafka topic instances
+  kubernetes.core.k8s_info:
+    kind: KafkaTopic
+    api_version: kafka.strimzi.io/v1beta2
+    namespace: "{{ namespace }}"
+  register: r_kafka_topics
+#- debug:
+#    msg: "{{ r_kafka_topics }}"
+
+- name: remove kafka topics
+  kubernetes.core.k8s:
+    state: absent
+    name: "{{ item.metadata.name }}"
+    kind: kafkatopic
+    namespace: "{{ namespace }}"
+    api_version: kafka.strimzi.io/v1beta2
+  with_items:
+    - "{{ r_kafka_topics.resources }}"

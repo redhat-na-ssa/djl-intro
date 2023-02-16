@@ -1,0 +1,15 @@
+---
+
+- name: set topic facts
+  set_fact:
+    topic_name: "{{ topic.name }}"
+    topic_partitions: "{{ topic.partitions }}"
+    topic_replicas: "{{ topic.replicas }}"
+    topic_config: "{{ topic.config }}"
+
+- name: "create {{ topic_name }} kafkatopic"
+  kubernetes.core.k8s:
+    state: present
+    kind: KafkaTopic
+    definition: "{{ lookup('template', 'templates/' + topic_template ) | from_yaml }}"
+    namespace: "{{ namespace }}"

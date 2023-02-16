@@ -80,6 +80,12 @@
       <artifactId>quarkus-container-image-docker</artifactId>
     </dependency>
 
+    <!-- kafka -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+    </dependency>
+
     <!--
         $ helm install djl-fprint-tensorflow-cpu ./target/helm/openshift/djl-fprint-tensorflow-cpu        :   deploy helm
     configured artifacts to OCP

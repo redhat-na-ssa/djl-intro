@@ -15,6 +15,8 @@ import java.awt.Graphics;
 import java.io.InputStream;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.smallrye.mutiny.Uni;
@@ -66,6 +68,9 @@ public class FingerprintResource extends BaseResource implements IApp {
 
     @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.prefix", defaultValue = FINGERPRINT_MODEL_ARTIFACT_PREFIX)
     String modelPrefix;
+
+    @Inject
+    Instance<PredictionProducer> pProducer;
     
     ZooModel<Image, Classifications> model;
 
@@ -212,7 +217,9 @@ public class FingerprintResource extends BaseResource implements IApp {
             predictor = model.newPredictor();
 
             Classifications result = predictor.predict(image);
-            Response eRes = Response.status(Response.Status.OK).entity(result.toJson()).build();
+            String predictionMessage = result.toJson();
+            pProducer.get().send(predictionMessage);
+            Response eRes = Response.status(Response.Status.OK).entity(predictionMessage).build();
             return Uni.createFrom().item(eRes);
         } catch (TranslateException e) {
             e.printStackTrace(); 
