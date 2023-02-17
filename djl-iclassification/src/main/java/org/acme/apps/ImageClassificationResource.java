@@ -110,6 +110,10 @@ public class ImageClassificationResource extends BaseResource implements IApp {
         }
     }
 
+    public ZooModel<?,?> getAppModel(){
+        return model;
+    }
+
 
     public Uni<Response> predict() {
 

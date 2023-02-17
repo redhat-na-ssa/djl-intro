@@ -58,11 +58,21 @@ public abstract class DJLMain {
         return djlApp.get().getGpuMemory();
     }
 
+
     @GET
-    @Path("/listModelAppSignatures")
+    @Path("/listDJLModelZooAppSignatures")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> listModelZooAppSignatures() {
-        return djlApp.get().listModelZooAppSignatures();
+    public Uni<Response> listDJLModelZooAppSignatures() {
+        return djlApp.get().listDJLModelZooAppSignatures();
+    }
+
+
+    @GET
+    @Path("/listAppModelInputsAndOutputs")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> listAppModelInputsAndOutputs() {
+        
+        return djlApp.get().listAppModelInputsAndOutputs(djlApp.get().getAppModel());
     }
     
 }

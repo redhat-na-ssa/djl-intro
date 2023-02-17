@@ -88,6 +88,10 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         }
         
     }
+
+    public ZooModel<?,?> getAppModel(){
+        return model;
+    }
     
     public Uni<Response> predict() {
         Predictor<Image, DetectedObjects> predictor = null;

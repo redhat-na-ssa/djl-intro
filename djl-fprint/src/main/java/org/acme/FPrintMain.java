@@ -33,4 +33,5 @@ public class FPrintMain extends DJLMain {
         log.info("startup() djlApp = "+djlApp.get());
         djlApp.get().startResource();
     }
+
 }

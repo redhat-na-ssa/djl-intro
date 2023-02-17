@@ -1,6 +1,7 @@
 package org.acme.apps;
 
 import java.lang.management.MemoryUsage;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,8 +18,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ai.djl.Application;
 import ai.djl.Device;
 import ai.djl.engine.Engine;
+import ai.djl.ndarray.types.Shape;
+import ai.djl.nn.Block;
+import ai.djl.nn.BlockList;
+import ai.djl.nn.Parameter;
+import ai.djl.nn.ParameterList;
 import ai.djl.repository.Artifact;
 import ai.djl.repository.zoo.ModelZoo;
+import ai.djl.repository.zoo.ZooModel;
+import ai.djl.util.Pair;
+import ai.djl.util.PairList;
 import ai.djl.util.cuda.CudaUtils;
 import io.smallrye.mutiny.Uni;
 
@@ -29,6 +38,8 @@ public class BaseResource {
     private String engineName;
 
     private ObjectMapper oMapper;
+
+    private Engine engine;
 
     public void start() {
 
@@ -43,7 +54,8 @@ public class BaseResource {
             log.info("engine = "+engine);
         }
 
-        engineName = Engine.getInstance().getEngineName();
+        engine = Engine.getInstance();
+        engineName = engine.getEngineName();
         log.infov("detect() defaultEngineName = {0}, runtime engineName = {1}", Engine.getDefaultEngineName(), engineName);
 
         oMapper = new ObjectMapper();
@@ -79,10 +91,10 @@ public class BaseResource {
         return Uni.createFrom().item(eRes);
     }
 
-    public Uni<Response> listModelZooAppSignatures() {
+    public Uni<Response> listDJLModelZooAppSignatures() {
         
         Map<Application, List<Artifact>> models;
-        Response eRes = null;;
+        Response eRes = null;
         try {
             ObjectNode rNode = oMapper.createObjectNode();
             models = ModelZoo.listModels();
@@ -109,6 +121,86 @@ public class BaseResource {
             eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Uni.createFrom().item(eRes);
+    }
+
+    public Uni<Response> listAppModelInputsAndOutputs(ZooModel<?,?> appModel) {
+        Response eRes = null;
+        try {
+            if(appModel == null)
+                throw new Exception("appModel is null");
+                
+            String appModelName = appModel.getName();
+            String appModelPath = appModel.getModelPath().toAbsolutePath().toString();
+            ObjectNode rNode = oMapper.createObjectNode();
+            rNode.put("modelName",appModelName);
+            rNode.put("appModelPath", appModelPath);
+
+            PairList<String, Shape> pListInput = appModel.describeInput();
+            ArrayNode inputNode = rNode.putArray("input");
+            if(pListInput != null && !pListInput.isEmpty()){
+
+                // DJL is throwing a NullPointerException when executing on ImageClassification / ImageDetection models
+                try {
+                    for(Entry<String, Shape> ePair : pListInput.toMap().entrySet()) {
+            
+                        Shape sObj = ePair.getValue();
+                        inputNode.add(ePair.getKey() +","+ sObj.toString());
+                       
+                    }
+                }catch(NullPointerException n){
+                    n.printStackTrace();
+                }
+            
+            }
+
+            PairList<String, Shape> pListOutput = appModel.describeOutput();
+            ArrayNode outputNode = rNode.putArray("output");
+            if(pListOutput != null && !pListOutput.isEmpty()){
+
+                // DJL is throwing a NullPointerException when executing on ImageClassification / ImageDetection models
+                try {
+                    for(Entry<String, Shape> ePairO : pListOutput.toMap().entrySet()) {
+                        Shape sObj = ePairO.getValue();
+                        outputNode.add(ePairO.getKey() +","+ sObj.toString());
+                    }
+                }catch(NullPointerException n){
+                    n.printStackTrace();
+                }
+            }
+
+            String[] aNames = appModel.getArtifactNames();
+            ArrayNode artifactNode = rNode.putArray("artifacts");
+            for(String aName: aNames) {
+                URL artifact = appModel.getArtifact(aName);
+                artifactNode.add(artifact.toString());
+            }
+
+            Block appBlock = appModel.getBlock();
+
+            BlockList blocks = appBlock.getChildren();
+            ArrayNode blockNode = rNode.putArray("blockList");
+            for(Pair<String, Block> pair : blocks) {
+                Block block = pair.getValue();
+                blockNode.add(pair.getKey());
+            }
+
+            /*  This is unsupported in DJL
+            ParameterList pList = appBlock.getParameters(); //appBlock.getDirectParameters();
+            ArrayNode paramNode = rNode.putArray("parameterList");
+            for(Pair<String, Parameter> pair : pList) {
+                Parameter param = pair.getValue();
+                paramNode.add(pair.getKey()+","+param.getName());
+            }
+            */
+
+            String modelsJson = rNode.toPrettyString();
+            eRes = Response.status(Response.Status.OK).entity(modelsJson).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }
+        return Uni.createFrom().item(eRes);
+
     }
     
 }

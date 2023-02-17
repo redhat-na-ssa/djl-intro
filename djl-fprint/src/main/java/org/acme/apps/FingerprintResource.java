@@ -34,7 +34,6 @@ import ai.djl.modality.cv.transform.CenterCrop;
 import ai.djl.modality.cv.transform.ToTensor;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
-import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
@@ -44,7 +43,6 @@ import ai.djl.translate.Pipeline;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import ai.djl.translate.TranslateException;
-import ai.djl.util.PairList;
 
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
@@ -72,7 +70,7 @@ public class FingerprintResource extends BaseResource implements IApp {
     @Inject
     Instance<PredictionProducer> pProducer;
     
-    ZooModel<Image, Classifications> model;
+    ZooModel<Image, Classifications> appModel;
 
     public void startResource() {
 
@@ -147,19 +145,7 @@ public class FingerprintResource extends BaseResource implements IApp {
                 .optTranslator(cTranslator)
                 .build();
         
-            model = criteria.loadModel();
-            PairList<String, Shape> pListInput = model.describeInput();
-            for(Entry<String, Shape> ePair : pListInput.toMap().entrySet()) {
-
-                Shape sObj = ePair.getValue();
-                log.debugv("input epair = {0} , {1}", ePair.getKey(), sObj.toString());
-            }
-            PairList<String, Shape> pListOutput = model.describeOutput();
-            for(Entry<String, Shape> ePairO : pListOutput.toMap().entrySet()) {
-                Shape sObj = ePairO.getValue();
-                log.debugv("output epair = {0} , {1}", ePairO.getKey(), sObj.toString());
-            }
-
+            appModel = criteria.loadModel();
 
             log.info("startResource() image classification based on: "+ imageUrl);
             URL url = new URL(imageUrl);
@@ -207,6 +193,10 @@ public class FingerprintResource extends BaseResource implements IApp {
         return null;
     }
 
+    public ZooModel<?,?> getAppModel(){
+        return appModel;
+    }
+
     public Uni<Response> predict() {
 
         Predictor<Image, Classifications> predictor = null;
@@ -214,7 +204,7 @@ public class FingerprintResource extends BaseResource implements IApp {
 
             // https://djl.ai/docs/development/inference_performance_optimization.html
             // "DJL Predictor is not designed to be thread-safe (although some implementations may be"
-            predictor = model.newPredictor();
+            predictor = appModel.newPredictor();
 
             Classifications result = predictor.predict(image);
             String predictionMessage = result.toJson();
