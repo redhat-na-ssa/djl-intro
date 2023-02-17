@@ -132,15 +132,15 @@ This DJL cache directory should be made writable by the container process for th
 . Make $DJL_CACHE_DIR writable for container process:
 +
 -----
-$ export DJL_CACHE_DIR=/u02/djl.ai \
-    && mkdir -p $DJL_CACHE_DIR
+$ export DJL_CACHE_DIR_OCI=/u02/djl.ai.oci \
+    && mkdir -p $DJL_CACHE_DIR_OCI
 
 $ sudo semanage fcontext -a \
-        -t container_file_t "$DJL_CACHE_DIR(/.*)?"
+        -t container_file_t "$DJL_CACHE_DIR_OCI(/.*)?"
 
-$ sudo restorecon -R $DJL_CACHE_DIR
+$ sudo restorecon -R $DJL_CACHE_DIR_OCI
 
-$ podman unshare chown -R 185:185 $DJL_CACHE_DIR
+$ podman unshare chown -R 185:185 $DJL_CACHE_DIR_OCI
 -----
 
 === Image Classification
@@ -197,7 +197,7 @@ $ podman run \
     -e JAVA_ENABLE_DEBUG="true" \
     -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
     -e DJL_CACHE_DIR=/mnt/djl.ai \
-    -v $DJL_CACHE_DIR:/mnt/djl.ai:z \
+    -v $DJL_CACHE_DIR_OCI:/mnt/djl.ai:z \
     quay.io/redhat_naps_da/djl-iclassification-$djl_engine:0.0.3
 -----
 
@@ -289,7 +289,7 @@ $ podman run \
     -e JAVA_ENABLE_DEBUG="true" \
     -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline -Dorg.acme.objectdetection.video.capture.device.id=$djl_video" \
     -e DJL_CACHE_DIR=/mnt/djl.ai \
-    -v $DJL_CACHE_DIR:/mnt/djl.ai:z \
+    -v $DJL_CACHE_DIR_OCI:/mnt/djl.ai:z \
     --device /dev/video$djl_video \
     --group-add keep-groups \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \

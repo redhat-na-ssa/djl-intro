@@ -19,18 +19,14 @@ import io.smallrye.mutiny.Uni;
 
 import org.jboss.logging.Logger;
 
-@ApplicationScoped
-@Path("djl")
-public class DJLMain {
+public abstract class DJLMain {
 
     Logger log = Logger.getLogger("DJLMain");
 
-    @Inject
-    Instance<IApp> djlApp;
+    private Instance<IApp> djlApp;
 
-    void startup(@Observes StartupEvent event)  {
-        log.info("startup() djlApp = "+djlApp.get());
-        djlApp.get().startResource();
+    public void setDjlApp(Instance<IApp> x){
+        this.djlApp = x;
     }
 
     @POST
@@ -65,8 +61,8 @@ public class DJLMain {
     @GET
     @Path("/listModelAppSignatures")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> listModelAppSignatures() {
-        return djlApp.get().listModelAppSignatures();
+    public Uni<Response> listModelZooAppSignatures() {
+        return djlApp.get().listModelZooAppSignatures();
     }
     
 }

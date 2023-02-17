@@ -11,6 +11,6 @@ public interface IApp {
     public Uni<Response> getGpuCount();
     public Uni<Response> getGpuMemory();
     public Uni<Response> predict();
-    public Uni<Response> listModelAppSignatures();
+    public Uni<Response> listModelZooAppSignatures();
   
 }

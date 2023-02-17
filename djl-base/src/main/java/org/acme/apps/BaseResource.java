@@ -79,7 +79,7 @@ public class BaseResource {
         return Uni.createFrom().item(eRes);
     }
 
-    public Uni<Response> listModelAppSignatures() {
+    public Uni<Response> listModelZooAppSignatures() {
         
         Map<Application, List<Artifact>> models;
         Response eRes = null;;
@@ -105,6 +105,7 @@ public class BaseResource {
             String modelsJson = rNode.toPrettyString();
             eRes = Response.status(Response.Status.OK).entity(modelsJson).build();
         } catch (Exception e) {
+            e.printStackTrace();
             eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Uni.createFrom().item(eRes);
