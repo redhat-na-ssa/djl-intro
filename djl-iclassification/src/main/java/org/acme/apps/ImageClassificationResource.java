@@ -14,7 +14,6 @@ package org.acme.apps;
 
 import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
-import ai.djl.modality.cv.BufferedImageFactory;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.transform.Normalize;
@@ -33,6 +32,7 @@ import io.smallrye.mutiny.Uni;
 import org.apache.commons.imaging.Imaging;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.Response;
 
@@ -62,6 +62,7 @@ public class ImageClassificationResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.djl.imageclassification.image.url", defaultValue = KITTEN_IMAGE_URL)
     String imageUrl;
     
+    @PostConstruct
     public void startResource()  {
         
         super.start();

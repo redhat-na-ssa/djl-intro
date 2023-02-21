@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics;
 import java.io.InputStream;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -72,6 +73,7 @@ public class FingerprintResource extends BaseResource implements IApp {
     
     ZooModel<Image, Classifications> appModel;
 
+    @PostConstruct
     public void startResource() {
 
         super.start();

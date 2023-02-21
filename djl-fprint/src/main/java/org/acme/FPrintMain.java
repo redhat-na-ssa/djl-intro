@@ -31,7 +31,6 @@ public class FPrintMain extends DJLMain {
     void startup(@Observes StartupEvent event)  {
         super.setDjlApp(djlApp);
         log.info("startup() djlApp = "+djlApp.get());
-        djlApp.get().startResource();
     }
 
 }

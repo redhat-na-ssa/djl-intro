@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
@@ -80,16 +81,21 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     private boolean predict = false;
     private int detectionCountState = -1;
 
+    @PostConstruct
     public void startResource() {
         
         super.start();
         try {
             
-            model = loadModel();
             
             fileDir = new File(oDetectionDirString);
             if(!fileDir.exists())
             fileDir.mkdirs();
+            
+            if(!(fileDir).canWrite())
+                throw new RuntimeException("Can not write in the following directory: "+fileDir.getAbsolutePath());
+
+            model = loadModel();
             
             OpenCV.loadShared();  // Link org.opencv.* related JNI classes (as found in: opencv-4.5.1-2.jar )
 
@@ -99,7 +105,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 
             log.infov("start() video capture device = {0} is open =  {1}", this.videoCaptureDevice, vCapture.isOpened() );
 
-
         }catch(Exception x){
             throw new RuntimeException(x);
         }finally {
@@ -107,9 +112,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         }
     }
 
-    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)     
+    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)
     void scheduledCapture() {
-
+        
         // Capture image from webcam
         Mat unboxedMat = new Mat();
         boolean captured = vCapture.read(unboxedMat);

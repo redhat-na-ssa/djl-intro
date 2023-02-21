@@ -294,7 +294,7 @@ $ podman run \
     --group-add keep-groups \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
     -v ./config/application.properties:/deployments/config/application.properties:z \
-    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
+    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.2
 -----
 
 . View RESTful API exposed by app:

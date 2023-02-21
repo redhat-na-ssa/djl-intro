@@ -5,6 +5,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -43,7 +44,6 @@ public class ObjectDetectionMain extends DJLMain {
     void startup(@Observes StartupEvent event)  {
         super.setDjlApp(djlApp);
         log.info("startup() djlApp = "+djlApp.get());
-        djlApp.get().startResource();
 
         this.eventBuilder = sse.newEventBuilder();
 
@@ -71,7 +71,7 @@ public class ObjectDetectionMain extends DJLMain {
         this.sseEventSink = sseEventSink;
     }
 
-    @GET
+    @POST
     @Path("/stopPrediction")
     public void stopPrediction() {
         LiveObjectDetectionResource lodr = (LiveObjectDetectionResource)((InstanceImpl)djlApp).get();
