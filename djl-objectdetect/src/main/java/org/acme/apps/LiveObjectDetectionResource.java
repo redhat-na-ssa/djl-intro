@@ -5,13 +5,17 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.scheduler.Scheduled;
+import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
@@ -54,9 +58,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     private static Logger log = Logger.getLogger("LiveObjectDetectionResource");
 
-    @ConfigProperty(name = "org.acme.objectdetection.capture.duration.millis", defaultValue = "10000")
-    int captureMillis;
-
     @ConfigProperty(name = "org.acme.objecdetection.image.directory", defaultValue="/tmp/org.acme.objectdetection")
     String oDetectionDirString;
 
@@ -76,11 +77,12 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     File fileDir;
 
     boolean continueToCapture = true;
-    
+    VideoCapture vCapture = null;
+    private boolean predict = false;
+
     public void startResource() {
         
         super.start();
-        VideoCapture vCapture = null;
         try {
             
             model = loadModel();
@@ -96,100 +98,112 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice);
                 
             log.infov("start() video capture device = {0} is open =  {1}", this.videoCaptureDevice, vCapture.isOpened() );
+
+
         }catch(Exception x){
             throw new RuntimeException(x);
         }finally {
-            if(vCapture != null && vCapture.isOpened())
-                vCapture.release();
+            
         }
         
+    }
+
+    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)     
+    void scheduledCapture() {
+
+
+        // Capture image from webcam
+        if(continueToCapture){
+            Mat unboxedMat = new Mat();
+            boolean captured = vCapture.read(unboxedMat);
+            if (captured)
+                bus.publish(AppUtils.CAPTURED_IMAGE, unboxedMat);
+        }
+
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        if(vCapture != null && vCapture.isOpened()){
+            vCapture.release();
+            log.infov("shutdown() video capture device = {0}", this.videoCaptureDevice );
+        }
+
     }
 
     public ZooModel<?,?> getAppModel(){
         return model;
     }
+
+    @ConsumeEvent(AppUtils.CAPTURED_IMAGE)
+    public void processCapturedEvent(Mat unboxedMat){
+        if(this.predict){
+            Predictor<Image, DetectedObjects> predictor = null;
+            try{
+    
+                // Detect presence of object in webcam captured image
+                ImageFactory factory = ImageFactory.getInstance();
+                Image img = factory.fromImage(unboxedMat);
+                predictor = model.newPredictor();
+                DetectedObjects detections = predictor.predict(img);
+                int dCount = detections.getNumberOfObjects();
+    
+                ObjectMapper oMapper = super.getObjectMapper();
+                ObjectNode rNode = oMapper.createObjectNode();
+                rNode.put("detectionCount", dCount);
+    
+                if(dCount > 0){
+                    long time = new Date().getTime();
+    
+                    rNode.put(AppUtils.ID, time);
+                    if(writeUnAdulatedImageToDisk){
+                        // Write un-boxed image to local file system
+                        File uBoxedImageFile = new File(fileDir,  "unAdulteredImage-"+time +".png");
+                        BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
+                        ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
+                        rNode.put(AppUtils.UNADULTERED_IMAGE_FILE_PATH, uBoxedImageFile.getAbsolutePath());
+                    }
+    
+                    Classifications.Classification dClass = detections.best();
+                    rNode.put(AppUtils.DETECTED_OBJECT_CLASSIFICATION, dClass.getClassName());
+                    rNode.put(AppUtils.DETECTED_OBJECT_PROBABILITY, dClass.getProbability());
+    
+        
+                    // Annotate video capture image w/ any detected objects
+                    img.drawBoundingBoxes(detections);
+        
+                    // Write boxed image to local file system
+                    Mat boxedImage = (Mat)img.getWrappedImage();
+                    File boxedImageFile = new File(fileDir,  "boxedImage-"+time +".png");
+                    BufferedImage bBoxedImage = toBufferedImage(boxedImage);
+                    ImageIO.write(bBoxedImage, "png", boxedImageFile);
+                    rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
+    
+                    bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
+                }   
+            }catch(Exception x){
+                x.printStackTrace();
+            }finally {
+                if(predictor != null)
+                    predictor.close();
+            }
+
+        }
+
+    }
+
+    public Uni<Response> stopPrediction() {
+
+        log.info("stopPrediction");
+        this.predict=false;
+        Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
+        return Uni.createFrom().item(eRes);
+    }
     
     public Uni<Response> predict() {
-        Predictor<Image, DetectedObjects> predictor = null;
-        VideoCapture vCapture = null;
-        try{
-            
-            vCapture = new VideoCapture(videoCaptureDevice);
-            if (!vCapture.isOpened()) {
-                throw new RuntimeException("No camera detected");
-            }
-
-            // Capture image from webcam
-            Mat unboxedMat = new Mat();
-            boolean captured = false;
-            while(continueToCapture){
-                captured = vCapture.read(unboxedMat);
-                if (captured)
-                    break;
-                
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignore) {
-                    // ignore
-                }
-            }
-
-            // Detect presence of object in webcam captured image
-            ImageFactory factory = ImageFactory.getInstance();
-            Image img = factory.fromImage(unboxedMat);
-            predictor = model.newPredictor();
-            DetectedObjects detections = predictor.predict(img);
-            int dCount = detections.getNumberOfObjects();
-
-            ObjectMapper oMapper = super.getObjectMapper();
-            ObjectNode rNode = oMapper.createObjectNode();
-            rNode.put("detectionCount", dCount);
-
-            if(dCount > 0){
-                long time = new Date().getTime();
-
-                rNode.put(AppUtils.ID, time);
-                if(writeUnAdulatedImageToDisk){
-                    // Write un-boxed image to local file system
-                    File uBoxedImageFile = new File(fileDir,  "unAdulteredImage-"+time +".png");
-                    BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
-                    ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
-                    rNode.put(AppUtils.UNADULTERED_IMAGE_FILE_PATH, uBoxedImageFile.getAbsolutePath());
-                }
-
-                Classifications.Classification dClass = detections.best();
-                rNode.put(AppUtils.DETECTED_OBJECT_CLASSIFICATION, dClass.getClassName());
-                rNode.put(AppUtils.DETECTED_OBJECT_PROBABILITY, dClass.getProbability());
-
-                String dJson = detections.toJson();
-                //log.infov("detection = {0]", dJson);
-    
-                // Annotate video capture image w/ any detected objects
-                img.drawBoundingBoxes(detections);
-    
-                // Write boxed image to local file system
-                Mat boxedImage = (Mat)img.getWrappedImage();
-                File boxedImageFile = new File(fileDir,  "boxedImage-"+time +".png");
-                BufferedImage bBoxedImage = toBufferedImage(boxedImage);
-                ImageIO.write(bBoxedImage, "png", boxedImageFile);
-                rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
-
-                bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
-            }
-
-            Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
-            return Uni.createFrom().item(eRes);
-        }catch(Exception x){
-            Response eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(x.getMessage()).build();
-            return Uni.createFrom().item(eRes);
-        }finally {
-            if(predictor != null)
-                predictor.close();
-            if(vCapture != null && vCapture.isOpened())
-                vCapture.release();
-        }
-        
-
+        this.predict=true;
+        Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
+        return Uni.createFrom().item(eRes);
     }
 
     private ZooModel<Image, DetectedObjects> loadModel() throws IOException, ModelException {
@@ -198,7 +212,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             .setTypes(Image.class, DetectedObjects.class)
             .optProgress(new ProgressBar());
 
-        String eType = Engine.getInstance().getDefaultEngineName();
+        String eType = Engine.getDefaultEngineName();
         Map<String, String> filters = null;
         if(PYTORCH.equalsIgnoreCase(eType)) {
             filters = cFilters.pytorch();

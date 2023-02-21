@@ -8,5 +8,6 @@ public class AppUtils {
     public static final String DETECTED_OBJECT_CLASSIFICATION = "detected_object_classification";
     public static final String DETECTED_OBJECT_PROBABILITY = "detected_object_probability";
     public static final String DETECTED_IMAGE_FILE_PATH = "detected_image_file_path";
+    public static final String CAPTURED_IMAGE = "captured_image";
     
 }

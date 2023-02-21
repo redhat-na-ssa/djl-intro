@@ -14,7 +14,9 @@ import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseEventSink;
 
 import org.acme.apps.IApp;
+import org.acme.apps.LiveObjectDetectionResource;
 
+import io.quarkus.arc.impl.InstanceImpl;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 
@@ -49,7 +51,7 @@ public class ObjectDetectionMain extends DJLMain {
 
     @ConsumeEvent(AppUtils.LIVE_OBJECT_DETECTION)
     public void consumeLiveObjectDetect(String event){
-        if(sseEventSink != null){
+        if(sseEventSink != null && !sseEventSink.isClosed()){
 
             final OutboundSseEvent sseEvent = this.eventBuilder
               .mediaType(MediaType.APPLICATION_JSON_TYPE)
@@ -67,6 +69,13 @@ public class ObjectDetectionMain extends DJLMain {
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public void consume (@Context SseEventSink sseEventSink) {
         this.sseEventSink = sseEventSink;
+    }
+
+    @GET
+    @Path("/stopPrediction")
+    public void stopPrediction() {
+        LiveObjectDetectionResource lodr = (LiveObjectDetectionResource)((InstanceImpl)djlApp).get();
+        lodr.stopPrediction();
     }
 
 }
