@@ -13,6 +13,9 @@ import javax.ws.rs.core.Response;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
+
+import org.acme.AppUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -21,7 +24,6 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import nu.pattern.OpenCV;
@@ -66,6 +68,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     @Inject
     CriteriaFilter cFilters;
+
+    @Inject
+    EventBus bus;
 
     ZooModel<Image, DetectedObjects> model;
     File fileDir;
@@ -141,18 +146,20 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             rNode.put("detectionCount", dCount);
 
             if(dCount > 0){
+                long time = new Date().getTime();
 
+                rNode.put(AppUtils.ID, time);
                 if(writeUnAdulatedImageToDisk){
                     // Write un-boxed image to local file system
-                    File uBoxedImageFile = new File(fileDir,  new Date().getTime() +".png");
+                    File uBoxedImageFile = new File(fileDir,  "unAdulteredImage-"+time +".png");
                     BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
                     ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
-                    rNode.put("unadultered_image_file_path", uBoxedImageFile.getAbsolutePath());
+                    rNode.put(AppUtils.UNADULTERED_IMAGE_FILE_PATH, uBoxedImageFile.getAbsolutePath());
                 }
 
                 Classifications.Classification dClass = detections.best();
-                rNode.put("detected_object_classification", dClass.getClassName());
-                rNode.put("detected_object_probability", dClass.getProbability());
+                rNode.put(AppUtils.DETECTED_OBJECT_CLASSIFICATION, dClass.getClassName());
+                rNode.put(AppUtils.DETECTED_OBJECT_PROBABILITY, dClass.getProbability());
 
                 String dJson = detections.toJson();
                 //log.infov("detection = {0]", dJson);
@@ -162,10 +169,12 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     
                 // Write boxed image to local file system
                 Mat boxedImage = (Mat)img.getWrappedImage();
-                File boxedImageFile = new File(fileDir,  new Date().getTime() +".png");
+                File boxedImageFile = new File(fileDir,  "boxedImage-"+time +".png");
                 BufferedImage bBoxedImage = toBufferedImage(boxedImage);
                 ImageIO.write(bBoxedImage, "png", boxedImageFile);
-                rNode.put("detected_image_file_path", boxedImageFile.getAbsolutePath());
+                rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
+
+                bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
             }
 
             Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
