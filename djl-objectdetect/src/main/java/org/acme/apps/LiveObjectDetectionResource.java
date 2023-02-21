@@ -19,12 +19,18 @@ import org.jboss.logging.Logger;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import nu.pattern.OpenCV;
 
 import ai.djl.Application;
 import ai.djl.ModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
+import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
@@ -55,11 +61,16 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objectdetection.video.capture.device.id", defaultValue = "0")
     int videoCaptureDevice;
 
+    @ConfigProperty(name = "org.acme.objectdetection.write.unadulted.image.to.disk", defaultValue = "False")
+    boolean writeUnAdulatedImageToDisk;
+
     @Inject
     CriteriaFilter cFilters;
 
     ZooModel<Image, DetectedObjects> model;
     File fileDir;
+
+    boolean continueToCapture = true;
     
     public void startResource() {
         
@@ -96,7 +107,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     public Uni<Response> predict() {
         Predictor<Image, DetectedObjects> predictor = null;
         VideoCapture vCapture = null;
-        String rMessage = "Failed to capture image from WebCam";
         try{
             
             vCapture = new VideoCapture(videoCaptureDevice);
@@ -107,41 +117,58 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             // Capture image from webcam
             Mat unboxedMat = new Mat();
             boolean captured = false;
-            for (int i = 0; i < 10; ++i) {
+            while(continueToCapture){
                 captured = vCapture.read(unboxedMat);
                 if (captured)
                     break;
                 
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
                     // ignore
                 }
             }
 
-            // Write un-boxed image to local file system
-            StringBuilder rBuilder = new StringBuilder();
-            File uBoxedImageFile = new File(fileDir,  new Date().getTime() +".png");
-            BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
-            ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
-            rBuilder.append("UnBoxed file = "+uBoxedImageFile.getAbsolutePath()+"\n");
-
-            // Detect presence of object in webcam captured image and draw a box around that object
+            // Detect presence of object in webcam captured image
             ImageFactory factory = ImageFactory.getInstance();
             Image img = factory.fromImage(unboxedMat);
             predictor = model.newPredictor();
             DetectedObjects detections = predictor.predict(img);
-            img.drawBoundingBoxes(detections);
+            int dCount = detections.getNumberOfObjects();
 
-            // Write boxed image to local file system
-            Mat boxedImage = (Mat)img.getWrappedImage();
-            File boxedImageFile = new File(fileDir,  new Date().getTime() +".png");
-            BufferedImage bBoxedImage = toBufferedImage(boxedImage);
-            ImageIO.write(bBoxedImage, "png", boxedImageFile);
-            rBuilder.append("Boxed file = "+boxedImageFile.getAbsolutePath()+"\n");
-            rMessage = rBuilder.toString();
+            ObjectMapper oMapper = super.getObjectMapper();
+            ObjectNode rNode = oMapper.createObjectNode();
+            rNode.put("detectionCount", dCount);
 
-            Response eRes = Response.status(Response.Status.OK).entity(rMessage).build();
+            if(dCount > 0){
+
+                if(writeUnAdulatedImageToDisk){
+                    // Write un-boxed image to local file system
+                    File uBoxedImageFile = new File(fileDir,  new Date().getTime() +".png");
+                    BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
+                    ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
+                    rNode.put("unadultered_image_file_path", uBoxedImageFile.getAbsolutePath());
+                }
+
+                Classifications.Classification dClass = detections.best();
+                rNode.put("detected_object_classification", dClass.getClassName());
+                rNode.put("detected_object_probability", dClass.getProbability());
+
+                String dJson = detections.toJson();
+                //log.infov("detection = {0]", dJson);
+    
+                // Annotate video capture image w/ any detected objects
+                img.drawBoundingBoxes(detections);
+    
+                // Write boxed image to local file system
+                Mat boxedImage = (Mat)img.getWrappedImage();
+                File boxedImageFile = new File(fileDir,  new Date().getTime() +".png");
+                BufferedImage bBoxedImage = toBufferedImage(boxedImage);
+                ImageIO.write(bBoxedImage, "png", boxedImageFile);
+                rNode.put("detected_image_file_path", boxedImageFile.getAbsolutePath());
+            }
+
+            Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
             return Uni.createFrom().item(eRes);
         }catch(Exception x){
             Response eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(x.getMessage()).build();

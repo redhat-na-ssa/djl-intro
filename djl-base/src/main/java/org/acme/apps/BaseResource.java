@@ -62,6 +62,10 @@ public class BaseResource {
 
     }
 
+    public ObjectMapper getObjectMapper() {
+        return oMapper;
+    }
+
     public String getEngineName() {
         return engineName;
     }
