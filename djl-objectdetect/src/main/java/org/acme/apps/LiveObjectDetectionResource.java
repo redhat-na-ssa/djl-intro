@@ -76,9 +76,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     ZooModel<Image, DetectedObjects> model;
     File fileDir;
 
-    boolean continueToCapture = true;
     VideoCapture vCapture = null;
     private boolean predict = false;
+    private int detectionCountState = -1;
 
     public void startResource() {
         
@@ -105,20 +105,16 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         }finally {
             
         }
-        
     }
 
     @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)     
     void scheduledCapture() {
 
-
         // Capture image from webcam
-        if(continueToCapture){
-            Mat unboxedMat = new Mat();
-            boolean captured = vCapture.read(unboxedMat);
-            if (captured)
-                bus.publish(AppUtils.CAPTURED_IMAGE, unboxedMat);
-        }
+        Mat unboxedMat = new Mat();
+        boolean captured = vCapture.read(unboxedMat);
+        if (captured)
+            bus.publish(AppUtils.CAPTURED_IMAGE, unboxedMat);
 
     }
 
@@ -128,7 +124,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             vCapture.release();
             log.infov("shutdown() video capture device = {0}", this.videoCaptureDevice );
         }
-
     }
 
     public ZooModel<?,?> getAppModel(){
@@ -147,12 +142,11 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 predictor = model.newPredictor();
                 DetectedObjects detections = predictor.predict(img);
                 int dCount = detections.getNumberOfObjects();
-    
-                ObjectMapper oMapper = super.getObjectMapper();
-                ObjectNode rNode = oMapper.createObjectNode();
-                rNode.put("detectionCount", dCount);
-    
-                if(dCount > 0){
+                
+                if(dCount != detectionCountState){
+                    ObjectMapper oMapper = super.getObjectMapper();
+                    ObjectNode rNode = oMapper.createObjectNode();
+                    rNode.put("detectionCount", dCount);
                     long time = new Date().getTime();
     
                     rNode.put(AppUtils.ID, time);
@@ -180,6 +174,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                     rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
     
                     bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
+                    this.detectionCountState = dCount;
                 }   
             }catch(Exception x){
                 x.printStackTrace();
@@ -187,15 +182,14 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 if(predictor != null)
                     predictor.close();
             }
-
         }
-
     }
 
     public Uni<Response> stopPrediction() {
 
         log.info("stopPrediction");
         this.predict=false;
+        this.detectionCountState = -1;
         Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
         return Uni.createFrom().item(eRes);
     }
