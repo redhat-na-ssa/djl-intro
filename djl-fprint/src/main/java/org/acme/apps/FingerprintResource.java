@@ -25,6 +25,11 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
@@ -45,6 +50,7 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import ai.djl.translate.TranslateException;
 
+import org.acme.AppUtils;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 
@@ -210,10 +216,17 @@ public class FingerprintResource extends BaseResource implements IApp {
 
             Classifications result = predictor.predict(image);
             String predictionMessage = result.toJson();
-            pProducer.get().send(predictionMessage);
-            Response eRes = Response.status(Response.Status.OK).entity(predictionMessage).build();
+            ObjectMapper mapper = super.getObjectMapper();
+
+            ObjectNode rNode = mapper.createObjectNode();
+            rNode.put(AppUtils.PROCESSED_IMAGE_URL, this.imageUrl);
+            ArrayNode pNode = mapper.readValue(predictionMessage, ArrayNode.class);
+            rNode.set(AppUtils.PREDICTION, pNode);
+
+            pProducer.get().send(rNode.toPrettyString());
+            Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
             return Uni.createFrom().item(eRes);
-        } catch (TranslateException e) {
+        } catch (JsonProcessingException | TranslateException e) {
             e.printStackTrace(); 
             Response eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
             return Uni.createFrom().item(eRes);
