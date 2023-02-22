@@ -104,35 +104,38 @@ public class FingerprintResource extends BaseResource implements IApp {
             Translator<Image, Classifications> cTranslator = new Translator<Image, Classifications>() {
 
                 @Override
-                public NDList processInput(TranslatorContext ctx, Image input) {
+                public NDList processInput(TranslatorContext ctx, Image inputImage) {
+
                     // Convert Image to NDArray
-                    NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.GRAYSCALE);
+                    NDArray array = inputImage.toNDArray(ctx.getNDManager(), Image.Flag.GRAYSCALE);
                     Pipeline pipeline = new Pipeline();
                     pipeline.add(new CenterCrop());
                     pipeline.add(new ToTensor());
-                    NDList inList = null;
-                    inList = pipeline.transform(new NDList(array));
+
+                    // Transform to NDList
+                    NDList inList = pipeline.transform(new NDList(array));
                     log.debugv("inList size = {0}", inList.size());
                     return inList;
                 }
             
                 @Override
                 public Classifications processOutput(TranslatorContext ctx, NDList list) {
-                    // Create a Classifications with the output probabilities
-                    for(NDArray ndA : list.getResourceNDArrays()) {
 
+                    for(NDArray ndA : list.getResourceNDArrays()) {
                         log.debugv("NDArray prior to softmax = {0} {1}", ndA.toDebugString(true), ndA.getName());
                     }
+
                     NDArray probabilities = list.singletonOrThrow().softmax(0);
 
                     for(NDArray ndA : probabilities.getResourceNDArrays()) {
-
                         log.debugv("probabilities = {0} {1}", ndA.toDebugString(true), ndA.getName());
                     }
                     
                     List<String> classNames = new ArrayList<String>();
                     classNames.add("LEFT");
                     classNames.add("RIGHT");
+
+                    // Create a Classifications with the output probabilities
                     return new Classifications(classNames, probabilities);
                 }
             
