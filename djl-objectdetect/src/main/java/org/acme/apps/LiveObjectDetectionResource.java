@@ -135,6 +135,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         return model;
     }
 
+    // Consumes video images for prediction analysis
     @ConsumeEvent(AppUtils.CAPTURED_IMAGE)
     public void processCapturedEvent(Mat unboxedMat){
         if(this.predict){
@@ -147,8 +148,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 predictor = model.newPredictor();
                 DetectedObjects detections = predictor.predict(img);
                 int dCount = detections.getNumberOfObjects();
-                
-                if(dCount != detectionCountState){
+               
+                log.debugv("{0} , {1}", detectionCountState, dCount); 
+                if(dCount != 0 && dCount != detectionCountState){
                     ObjectMapper oMapper = super.getObjectMapper();
                     ObjectNode rNode = oMapper.createObjectNode();
                     rNode.put("detectionCount", dCount);
@@ -180,7 +182,10 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     
                     bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
                     this.detectionCountState = dCount;
-                }   
+                }else if(dCount == 0 && dCount != detectionCountState){
+                    this.detectionCountState = 0;
+                    log.info("switching detection state back to 0");
+                }
             }catch(Exception x){
                 x.printStackTrace();
             }finally {
@@ -200,6 +205,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     }
     
     public Uni<Response> predict() {
+        log.info("will now begin to predict on video capture stream");
         this.predict=true;
         Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
         return Uni.createFrom().item(eRes);
