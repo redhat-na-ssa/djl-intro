@@ -34,7 +34,7 @@ public class ObjectDetectionMain extends DJLMain {
     private OutboundSseEvent.Builder eventBuilder;
 
     @Context
-    private Sse sse;
+    protected Sse sse;
 
     private SseEventSink sseEventSink = null;
 
@@ -67,7 +67,7 @@ public class ObjectDetectionMain extends DJLMain {
     @GET
     @Path("/event/objectDetectionStream")
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void consume (@Context SseEventSink sseEventSink) {
+    public void consumeSSE (@Context SseEventSink sseEventSink) {
         this.sseEventSink = sseEventSink;
     }
 

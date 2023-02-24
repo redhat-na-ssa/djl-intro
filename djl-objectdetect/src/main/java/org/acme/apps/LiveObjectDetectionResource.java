@@ -153,10 +153,11 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 if(dCount != 0 && dCount != detectionCountState){
                     ObjectMapper oMapper = super.getObjectMapper();
                     ObjectNode rNode = oMapper.createObjectNode();
-                    rNode.put("detectionCount", dCount);
+                    rNode.put(AppUtils.DETECTION_COUNT, dCount);
                     long time = new Date().getTime();
     
                     rNode.put(AppUtils.ID, time);
+                    rNode.put(AppUtils.DEVICE_ID, System.getenv(AppUtils.HOSTNAME));
                     if(writeUnAdulatedImageToDisk){
                         // Write un-boxed image to local file system
                         File uBoxedImageFile = new File(fileDir,  "unAdulteredImage-"+time +".png");
