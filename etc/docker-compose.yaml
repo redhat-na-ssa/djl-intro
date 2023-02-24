@@ -79,7 +79,7 @@ services:
     ports:
       - "8161:8161"
       - "61616:61616"
-      - "5672:5672"
+      - "1883:1883"
     environment:
       AMQ_USER: djl
       AMQ_PASSWORD: djl
