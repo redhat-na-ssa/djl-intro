@@ -41,6 +41,7 @@ import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.repository.zoo.Criteria.Builder;
@@ -87,7 +88,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         super.start();
         try {
             
-            
+            // 1)  Ensure that app can write captured images to file system
             fileDir = new File(oDetectionDirString);
             if(!fileDir.exists())
             fileDir.mkdirs();
@@ -95,15 +96,22 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             if(!(fileDir).canWrite())
                 throw new RuntimeException("Can not write in the following directory: "+fileDir.getAbsolutePath());
 
+            // 2)  Load model
             model = loadModel();
             
-            OpenCV.loadShared();  // Link org.opencv.* related JNI classes (as found in: opencv-4.5.1-2.jar )
-
+            // 3) Enable web cam  (but don't start capturing images and executing object detection predictions on those images just yet)
+            OpenCV.loadShared();
             vCapture = new VideoCapture(videoCaptureDevice);
             if(!vCapture.isOpened())
                 throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice);
                 
-            log.infov("start() video capture device = {0} is open =  {1}", this.videoCaptureDevice, vCapture.isOpened() );
+            /* Implementations:
+             *      ai.djl.pytorch.engine.PtNDManager
+             *      ai.djl.mxnet.engine.MxNDManager
+             *      ai.djl.tensorflow.engine.TfNDManager
+             */
+            NDManager ndManager = NDManager.newBaseManager();
+            log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}", this.videoCaptureDevice, vCapture.isOpened(), ndManager.getClass().getName() );
 
         }catch(Exception x){
             throw new RuntimeException(x);
@@ -112,6 +120,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         }
     }
 
+    // Capture raw video device snapshots at periodic intervals
     @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)
     void scheduledCapture() {
         
@@ -123,32 +132,22 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     }
 
-    @PreDestroy
-    public void shutdown() {
-        if(vCapture != null && vCapture.isOpened()){
-            vCapture.release();
-            log.infov("shutdown() video capture device = {0}", this.videoCaptureDevice );
-        }
-    }
 
-    public ZooModel<?,?> getAppModel(){
-        return model;
-    }
-
-    // Consumes video images for prediction analysis
+    // Consume raw video snapshots and apply prediction analysis
     @ConsumeEvent(AppUtils.CAPTURED_IMAGE)
     public void processCapturedEvent(Mat unboxedMat){
         if(this.predict){
             Predictor<Image, DetectedObjects> predictor = null;
             try{
     
-                // Detect presence of object in webcam captured image
+                // Determine presence of objects from raw video snapshot
                 ImageFactory factory = ImageFactory.getInstance();
                 Image img = factory.fromImage(unboxedMat);
                 predictor = model.newPredictor();
                 DetectedObjects detections = predictor.predict(img);
                 int dCount = detections.getNumberOfObjects();
                
+                // Depending if there is a state change of object detection, generate an event
                 log.debugv("{0} , {1}", detectionCountState, dCount); 
                 if(dCount != 0 && dCount != detectionCountState){
                     ObjectMapper oMapper = super.getObjectMapper();
@@ -194,6 +193,19 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                     predictor.close();
             }
         }
+    }
+
+
+    @PreDestroy
+    public void shutdown() {
+        if(vCapture != null && vCapture.isOpened()){
+            vCapture.release();
+            log.infov("shutdown() video capture device = {0}", this.videoCaptureDevice );
+        }
+    }
+
+    public ZooModel<?,?> getAppModel(){
+        return model;
     }
 
     public Uni<Response> stopPrediction() {
