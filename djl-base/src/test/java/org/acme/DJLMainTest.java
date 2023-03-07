@@ -11,9 +11,9 @@ import javax.ws.rs.core.Response;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import io.quarkus.test.junit.QuarkusTest;
 
 import ai.djl.repository.zoo.ZooModel;
-import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 
 import org.acme.apps.BaseResource;

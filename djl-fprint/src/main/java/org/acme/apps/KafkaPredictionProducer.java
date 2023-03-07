@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.acme.AppUtils;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -20,10 +21,10 @@ public class KafkaPredictionProducer implements PredictionProducer{
 
     private static final Logger log = Logger.getLogger("KafkaPredictionProducer");
 
-    private static final String FPRINT_PREDICTION_EVENT_CHANNEL = "fprint-prediction-event";
+   
 
     @Inject
-    @Channel(FPRINT_PREDICTION_EVENT_CHANNEL)
+    @Channel(AppUtils.FPRINT_PREDICTION_EVENT_CHANNEL)
     Emitter<String> eventChannel;
 
     public boolean send(String message) {

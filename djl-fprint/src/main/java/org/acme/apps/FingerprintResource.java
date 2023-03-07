@@ -219,8 +219,8 @@ public class FingerprintResource extends BaseResource implements IApp {
 
             Classifications result = predictor.predict(image);
             String predictionMessage = result.toJson();
-            ObjectMapper mapper = super.getObjectMapper();
 
+            ObjectMapper mapper = super.getObjectMapper();
             ObjectNode rNode = mapper.createObjectNode();
             rNode.put(AppUtils.PROCESSED_IMAGE_URL, this.imageUrl);
             ArrayNode pNode = mapper.readValue(predictionMessage, ArrayNode.class);
@@ -229,7 +229,7 @@ public class FingerprintResource extends BaseResource implements IApp {
             pProducer.get().send(rNode.toPrettyString());
             Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
             return Uni.createFrom().item(eRes);
-        } catch (JsonProcessingException | TranslateException e) {
+        } catch (TranslateException | JsonProcessingException e) {
             e.printStackTrace(); 
             Response eRes = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
             return Uni.createFrom().item(eRes);
