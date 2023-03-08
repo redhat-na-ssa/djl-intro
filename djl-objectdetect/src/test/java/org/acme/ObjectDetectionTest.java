@@ -79,30 +79,39 @@ public class ObjectDetectionTest {
     @Test
     public void predictionCDITest() {
 
-        Integer vCaptureDevice = (Integer)iMain.predict().await().atMost(Duration.ofSeconds(2)).getEntity();
-
+        
         // setup callback
         client.setCallback(new MqttCallback() {
-
+            
             public void connectionLost(Throwable cause) {
                 log.info("connectionLost: " + cause.getMessage());
-           }
-
+            }
+            
             public void messageArrived(String topic, MqttMessage message) {
                 log.infov("topic: {0}  ;QoS: {1}", topic, message.getQos());
                 log.info("message content: " + new String(message.getPayload()));
                 mqttCount.incrementAndGet();
-           }
-
+            }
+            
             public void deliveryComplete(IMqttDeliveryToken token) {
                 log.info("deliveryComplete---------" + token.isComplete());
-           }
-
+            }
+            
         });
         try {
+            // Subscribe to topic
             client.subscribe(topic, 0);
+
+            // Predict and push MQTT message
+            Integer vCaptureDevice = (Integer)iMain.predict().await().atMost(Duration.ofSeconds(2)).getEntity();
+
+            // Wait for consumption of message
             await().atMost(5000, TimeUnit.MILLISECONDS).until( () -> mqttCount.get() == 1);
+
+            // Assert message sent
             Assertions.assertTrue(mqttCount.get() ==1);
+
+            // Unsubscribe
             client.unsubscribe(topic);
 
         } catch (MqttException e) {
