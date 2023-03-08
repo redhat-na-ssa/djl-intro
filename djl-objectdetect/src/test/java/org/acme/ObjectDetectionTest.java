@@ -6,6 +6,7 @@ import static org.awaitility.Awaitility.await;
 import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +32,7 @@ import org.jboss.logging.Logger;
  *        A configured MQTT server is provided in this project as per:   docker-compose -f etc/docker-compose.yaml up -d
  */
 @QuarkusTest
+@QuarkusTestResource(value=CustomMQTTResource.class)
 public class ObjectDetectionTest {
 
     private static Logger log = Logger.getLogger(ObjectDetectionTest.class);
