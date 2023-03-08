@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
 
 /*
  * NOTE:  You'll need to start up an MQTT server to support this test.
- *        A configured MQTT server is provided in this project:   docker-compose -f etc/docker-compose.yaml up -d
+ *        A configured MQTT server is provided in this project as per:   docker-compose -f etc/docker-compose.yaml up -d
  */
 @QuarkusTest
 public class ObjectDetectionTest {
