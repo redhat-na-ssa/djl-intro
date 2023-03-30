@@ -2,6 +2,7 @@ package org.acme.apps;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,6 +50,8 @@ import ai.djl.training.util.ProgressBar;
 
 import java.awt.image.BufferedImage;
 
+import com.sun.security.auth.module.UnixSystem;
+
 
 @LookupIfProperty(name = "org.acme.djl.resource", stringValue = "LiveObjectDetectionResource")
 @ApplicationScoped
@@ -87,6 +90,12 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         
         super.start();
         try {
+
+            /* Determine groups
+             *   troubleshoot:  podman run -it --rm  --group-add keep-groups quay.io/redhat_naps_da/djl-objectdetect-pytorch:0.0.3 id -a
+             */
+            UnixSystem uSystem = new UnixSystem();
+            long[] groups = uSystem.getGroups();
             
             // 1)  Ensure that app can write captured images to file system
             fileDir = new File(oDetectionDirString);
@@ -103,7 +112,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             OpenCV.loadShared();
             vCapture = new VideoCapture(videoCaptureDevice);
             if(!vCapture.isOpened())
-                throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice);
+                throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice+" and OS groups: "+Arrays.toString(groups));
                 
             /* Implementations:
              *      ai.djl.pytorch.engine.PtNDManager
@@ -111,9 +120,13 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
              *      ai.djl.tensorflow.engine.TfNDManager
              */
             NDManager ndManager = NDManager.newBaseManager();
-            log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}", this.videoCaptureDevice, vCapture.isOpened(), ndManager.getClass().getName() );
+            log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}  and OS groups {3}", 
+                this.videoCaptureDevice, 
+                vCapture.isOpened(),
+                ndManager.getClass().getName(),
+                Arrays.toString(groups));
 
-        }catch(Exception x){
+        }catch(Throwable x){
             throw new RuntimeException(x);
         }finally {
             

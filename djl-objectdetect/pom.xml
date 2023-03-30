@@ -12,7 +12,7 @@
   </parent>
   <groupId>com.redhat.na.ssa</groupId>
   <artifactId>djl-objectdetect</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
 
   <dependencies>
 
@@ -65,6 +65,19 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-container-image-jib</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-openshift</artifactId>
+    </dependency>
+
+    <!--
+        $ helm install djl-objectdetect-tensorflow ./target/helm/kubernetes/djl-objectdetect-tensorflow        :   deploy helm configured artifacts to OCP
+      -->
+    <dependency>
+      <groupId>io.quarkiverse.helm</groupId>
+      <artifactId>quarkus-helm</artifactId>
+      <version>0.2.0</version>
     </dependency>
 
     <dependency>

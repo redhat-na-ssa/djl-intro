@@ -67,5 +67,4 @@ djl_fprint_url: "http://{{ djl_fprint_app_name }}.{{ project_name }}:8080"
 
 djl_fprint_prediction_event_topic: fprint-prediction-event
 
-
 #########################################

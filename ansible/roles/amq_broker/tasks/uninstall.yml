@@ -1,0 +1,21 @@
+---
+
+- name: "delete ActiveMQArtemis from  {{ namespace_amq_broker }}"
+  k8s:
+    state: absent
+    name: artemis
+    namespace: "{{ namespace_amq_broker }}"
+    api_version: broker.amq.io/v1beta1
+    kind: ActiveMQArtemis
+
+- name: "delete amq broker operator in {{ namespace_amq_broker_operator }} namespace"
+  import_role:
+    name: ../roles/operator_olm
+    tasks_from: uninstall
+  vars:
+    operator_name: amq-broker-operator
+    subscription_namespace: "{{ namespace_amq_broker_operator }}"
+    subscription_name: "{{ amq_broker_operator_subscription_name }}"
+    csv_prefix: "{{ amq_broker_operator_csv_prefix }}"
+  when: undeploy_amq_broker_operator is defined and undeploy_amq_broker_operator == "true"
+

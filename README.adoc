@@ -259,8 +259,10 @@ Podman allows for that however you need to ensure that your host operating syste
 -----
 $ sudo usermod -a -G video <your OS user name>
 -----
++
+NOTE: For more info about podman's ability to provide access to the host machine's video card, please review link:https://www.redhat.com/sysadmin/files-devices-podman[this document].
 
-. The `djl-objectdetection` container needs the ability to write images to the filesystem of the host.
+. The `djl-objectdetection` container needs the ability to write video capture images to the filesystem of the host.
 Subsequently, in this step you enable the local filesystem to be writable by the container:
 +
 -----
@@ -277,8 +279,6 @@ $ podman unshare chown -R 185:185 $I_DIR
 
 
 . Run linux container using designated deep learning engine:
-+
-NOTE: podman utility provides access to the host machine's video card as per link:https://www.redhat.com/sysadmin/files-devices-podman[this document]
 +
 -----
 $ podman run \
@@ -300,6 +300,8 @@ $ podman run \
 . View RESTful API exposed by app:
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
+
+image::docs/images/djl-object-detect-mqtt-artemis-web-admin.png[]
 
 === Fingerprint Serving
 

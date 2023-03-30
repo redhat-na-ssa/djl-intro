@@ -20,28 +20,3 @@
     namespace: "{{ namespace_amq_streams_operator }}"
     wait_sleep: 10
     wait_timeout: 90
-
-#- name: "set amq streams operator deployment name"
-#  set_fact:
-#    amq_streams_operator_deployment_name: "{{ r_amq_streams_operator_deployment.ansible_module_results.results[0]['items'] | to_json | from_json | json_query(query) }}"
-#  vars:
-#    query: >-
-#      [?starts_with(metadata.name, '{{ amq_streams_operator_deployment }}')].metadata.name|[0]
-
-#- name: "wait until amq streams operator is active in {{ namespace_amq_streams_operator }}"
-#  oc_obj:
-#    state: list
-#    oc_binary: "{{ openshift_cli }}"    
-#    kind: Deployment
-#    name: "{{ amq_streams_operator_deployment_name }}"
-#    namespace: "{{ namespace_amq_streams_operator }}"
-#  register: r_amq_streams_operator_deployment
-#  retries: 30
-#  delay: 10
-#  changed_when: false
-#  until:
-#    - r_amq_streams_operator_deployment.ansible_module_results.results[0].status.readyReplicas is defined
-#    - r_amq_streams_operator_deployment.ansible_module_results.results[0].status.replicas is defined
-#    - >-
-#      r_amq_streams_operator_deployment.ansible_module_results.results[0].status.readyReplicas ==
-#      r_amq_streams_operator_deployment.ansible_module_results.results[0].status.replicas

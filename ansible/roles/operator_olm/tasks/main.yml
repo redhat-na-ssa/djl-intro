@@ -51,7 +51,7 @@
   delay: 5
   until:
     - r_install_plan.resources | length > 0
-    - r_install_plan.resources | length > 0
+    - r_install_plan.resources[0] | length > 0
     - r_install_plan.resources | to_json | from_json | json_query(iplanquery) | d(False)
   vars:
     iplanquery: "[?contains(spec.clusterServiceVersionNames[0], '{{ csv_prefix }}')] | [0].metadata.name"

@@ -1,0 +1,20 @@
+---
+
+# NOTE: In microshift with community olm installed, namespace will be:  operators
+namespace_amq_broker_operator: "openshift-operators"
+
+namespace_amq_broker: "{{ project_name }}"
+
+
+amq_broker_operator_packagemanifest: amq-broker-rhel8
+amq_broker_operator_subscription_name: amq-broker-rhel8
+amq_broker_operator_subscription_channel: 7.10.x
+amq_broker_operator_subscription_automatic_installplan_approval: true
+
+# OCP 4.12
+amq_broker_subscription_starting_csv: "amq-broker-operator.v7.10.2-opr-2-0.1676475747.p"
+
+amq_broker_operator_csv_prefix: amq-broker-operator
+amq_broker_operator_deployment: amq-broker-operator
+
+deploy_mqtt_load_balancer_service: true
