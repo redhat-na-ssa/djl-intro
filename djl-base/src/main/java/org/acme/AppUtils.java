@@ -2,6 +2,10 @@ package org.acme;
 
 public class AppUtils {
 
+    public static final String PROCESSED_IMAGE_URL = "processed_image_url";
+    public static final String PREDICTION = "prediction";
+    public static final String FPRINT_PREDICTION_EVENT_CHANNEL = "fprint-prediction-event";
+
     public static final String LIVE_OBJECT_DETECTION = "liveObjectDetection";
     public static final String LIVE_OBJECT_DETECTION_INCOMING = "liveObjectDetectionIncoming";
     public static final String ID = "id";

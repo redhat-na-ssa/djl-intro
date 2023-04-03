@@ -74,6 +74,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objectdetection.write.unadulted.image.to.disk", defaultValue = "False")
     boolean writeUnAdulatedImageToDisk;
 
+    @ConfigProperty(name = "org.acme.objectdetection.predictAtStartup", defaultValue = "True")
+    boolean predict;
+
     @Inject
     CriteriaFilter cFilters;
 
@@ -84,7 +87,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     File fileDir;
 
     VideoCapture vCapture = null;
-    private boolean predict = false;
     private int detectionCountState = -1;
 
     @PostConstruct

@@ -16,7 +16,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.acme</groupId>
+      <groupId>com.redhat.na.ssa</groupId>
       <artifactId>djl-base</artifactId>
       <version>0.0.1</version>
     </dependency>
