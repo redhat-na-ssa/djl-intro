@@ -3,6 +3,7 @@ package org.acme.apps;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,6 +23,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 import org.acme.AppUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -192,6 +194,11 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                     BufferedImage bBoxedImage = toBufferedImage(boxedImage);
                     ImageIO.write(bBoxedImage, "png", boxedImageFile);
                     rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
+
+                    // Encode binary image to Base64 string and add to payload
+                    byte[] base64encodedImage = FileUtils.readFileToByteArray(boxedImageFile);
+                    String stringEncodedImage = Base64.getEncoder().encodeToString(base64encodedImage);
+                    rNode.put(AppUtils.BASE64_DETECTED_IMAGE, stringEncodedImage);
     
                     bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
                     this.detectionCountState = dCount;

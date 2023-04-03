@@ -13,5 +13,6 @@ public class AppUtils {
     public static final String DETECTION_COUNT = "detection_count";
     public static final String DEVICE_ID = "device_id";
     public static final String HOSTNAME = "HOSTNAME";
+    public static final String BASE64_DETECTED_IMAGE = "base64DetectedImage";
     
 }
