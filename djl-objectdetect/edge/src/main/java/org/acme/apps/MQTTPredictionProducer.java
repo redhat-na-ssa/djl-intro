@@ -25,7 +25,7 @@ public class MQTTPredictionProducer implements PredictionProducer {
 
     @ConsumeEvent(AppUtils.LIVE_OBJECT_DETECTION)
     public boolean send(String message) {
-        log.infov("send() message = {0}", message);
+        //log.infov("send() message = {0}", message);
         eventChannel.send(message);
         return true;
     }
