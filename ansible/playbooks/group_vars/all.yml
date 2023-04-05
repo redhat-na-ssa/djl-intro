@@ -53,6 +53,10 @@ zync_sso_client_secret: zyncsso
 #################################################
 
 
+##########    messaging     ###########
+artemis_service_name: artemis-mqtt-0-svc
+#######################################
+
 
 
 #########     services    ##############
@@ -66,5 +70,7 @@ djl_fprint_app_name: djl-fprint
 djl_fprint_url: "http://{{ djl_fprint_app_name }}.{{ project_name }}:8080"
 
 djl_fprint_prediction_event_topic: fprint-prediction-event
+
+djl_odetect_web_app_name: djl-objectdetect-web
 
 #########################################

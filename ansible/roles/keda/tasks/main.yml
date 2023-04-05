@@ -1,0 +1,81 @@
+---
+
+- name: "deploy amq broker operator in {{ namespace_amq_broker_operator }}"
+  import_role:
+    name: ../roles/operator_olm
+  vars:
+    operator_name: amq-broker-operator
+    packagemanifest: "{{ amq_broker_operator_packagemanifest }}"
+    subscription_channel: "{{ amq_broker_operator_subscription_channel }}"
+    subscription_namespace: "{{ namespace_amq_broker_operator }}"
+    subscription_name: "{{ amq_broker_operator_subscription_name }}"
+    automatic_installplan_approval: "{{ amq_broker_operator_subscription_automatic_installplan_approval }}"
+    subscription_starting_csv: "{{ amq_broker_subscription_starting_csv }}"
+    csv_prefix: "{{ amq_broker_operator_csv_prefix }}"
+
+- name: "wait until amq broker operator deployment is created"
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: "not sure"
+    namespace: "{{ namespace_amq_broker_operator }}"
+    wait_sleep: 10
+    wait_timeout: 90
+
+# https://github.com/artemiscloud/activemq-artemis-operator/tree/main/examples/artemis
+- name: "Deploy ActiveMQArtemis in {{ namespace_amq_broker }}"
+  k8s:
+    state: present
+    namespace: "{{ namespace_amq_broker }}"
+    definition:
+      apiVersion: keda.sh/v1alpha1
+      kind: KedaController
+      metadata:
+        name: keda
+        namespace: openshift-operators
+      spec:
+        metricsServer:
+          logLevel: '0'
+        operator:
+          logLevel: info
+          logEncoder: console
+        serviceAccount: {}
+        watchNamespace: ''
+
+- name: "wait until artemis-ss StatefulSet is active in {{ namespace_amq_broker }}"
+  kubernetes.core.k8s_info:
+    kind: StatefulSet
+    name: "artemis-ss"
+    namespace: "{{ namespace_amq_broker}}"
+  register: r_ss
+  retries: 20
+  delay: 5
+  until:
+    - r_ss.resources | length > 0
+    - r_ss.resources[0] | length > 0
+    - r_ss.resources[0].status.availableReplicas == 1
+
+
+- name: "Deploy mqtt load balancer service in {{ namespace_amq_broker }}"
+  k8s:
+    state: present
+    namespace: "{{ namespace_amq_broker }}"
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: mqtt-lb
+      spec:
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        ports:
+          - port: 1883
+            targetPort: 1883
+            protocol: TCP
+            name: mqtt
+        selector:
+          ActiveMQArtemis: artemis
+          application: artemis-app
+          statefulset.kubernetes.io/pod-name: artemis-ss-0
+  when: deploy_mqtt_load_balancer_service|bool
+
+

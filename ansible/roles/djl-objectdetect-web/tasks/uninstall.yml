@@ -1,0 +1,15 @@
+---
+
+- name: delete helm deployed resources
+  kubernetes.core.helm:
+    name: "{{ application_name }}"
+    state: absent
+    release_namespace: "{{ namespace }}"
+    wait: true
+
+- name: "delete configmap {{ application_configmap }}"
+  k8s:
+    state: absent
+    name: "{{ application_configmap }}"
+    namespace: "{{ namespace }}"
+    kind: ConfigMap

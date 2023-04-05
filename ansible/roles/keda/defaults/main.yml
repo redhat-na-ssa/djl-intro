@@ -1,0 +1,18 @@
+---
+
+# NOTE: In microshift with community olm installed, namespace will be:  operators
+namespace_keda_operator: "openshift-operators"
+
+namespace_keda: "{{ project_name }}"
+
+
+keda_operator_packagemanifest: openshift-custom-metrics-autoscaler-operator
+keda_operator_subscription_name: openshift-custom-metrics-autoscaler-operator
+keda_operator_subscription_channel: stable
+keda_operator_subscription_automatic_installplan_approval: false
+
+# OCP 4.12
+keda_subscription_starting_csv: "custom-metrics-autoscaler.v2.8.2-143"
+
+keda_operator_csv_prefix: custom-metrics-autoscaler
+keda_operator_deployment: custom-metrics-autoscaler-operator

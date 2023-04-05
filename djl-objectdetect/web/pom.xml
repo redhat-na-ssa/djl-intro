@@ -40,6 +40,25 @@
       <artifactId>quarkus-quinoa</artifactId>
       <version>1.2.8</version>
     </dependency>
+
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-container-image-docker</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-openshift</artifactId>
+    </dependency>
+
+    <!--
+        $ helm install backend-oidc ./target/helm/openshift/backend-oidc        :   deploy helm configured artifacts to OCP
+    -->
+    <dependency>
+        <groupId>io.quarkiverse.helm</groupId>
+        <artifactId>quarkus-helm</artifactId>
+        <version>0.2.0</version>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>

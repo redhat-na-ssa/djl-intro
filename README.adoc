@@ -294,7 +294,7 @@ $ podman run \
     --group-add keep-groups \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
     -v ./config/application.properties:/deployments/config/application.properties:z \
-    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.2
+    quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.3
 -----
 
 . View RESTful API exposed by app:
@@ -584,6 +584,23 @@ $ podman run \
     -v /tmp/org.acme.objectdetection:/tmp/org.acme.objectdetection:z \
     -v ./config/application.properties:/deployments/config/application.properties:z \
     quay.io/redhat_naps_da/djl-objectdetect-$djl_engine:0.0.1
+-----
+
+-----
+$ ./mvnw clean package \
+            -Dquarkus.application.name=djl-objectdetect-web \
+            -DskipTests \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true
+-----
+
+-----
+$ podman run \
+    --rm \
+    --name djl-objectdetect-web \
+    -p 9080:9080 \
+    -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dmp.messaging.incoming.liveObjectDetection.host=$HOSTNAME -Dquarkus.http.port=9080" \
+    quay.io/redhat_naps_da/djl-objectdetect-web:0.0.1
 -----
 
 == Questions
