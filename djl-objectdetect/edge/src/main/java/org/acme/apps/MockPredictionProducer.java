@@ -9,6 +9,9 @@ import io.quarkus.vertx.ConsumeEvent;
 
 import org.acme.AppUtils;
 
+/* 
+ * TO-DO: This class continues to get instantiated regarding of value of the lookup property
+ */
 @LookupIfProperty(name = "org.acme.djl.prediction.producer", stringValue = "MockPredictionProducer")
 @ApplicationScoped
 public class MockPredictionProducer implements PredictionProducer {
