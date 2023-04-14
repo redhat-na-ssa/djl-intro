@@ -22,7 +22,9 @@ The project demonstrates serving of the following _deep learning_ applications c
 . _Intelligence at the Edge_ via *link:docs/README-djl-objectdetect.adoc[Live Object Detection]*
 . *link:docs/README-djl-fprint.adoc[Fingerprint Detection]*
 
-
+== Reference
+. If you want to learn more about Quarkus, please visit its link:https://quarkus.io[website].
+. If you want to learn more about _Deep Java Library_, please visit its link:https://djl.ai[website]
 
 == Appendix
 
@@ -76,12 +78,14 @@ mvn io.quarkus:quarkus-maven-plugin:2.14.0.Final:create \
 
 DJL and Quarkus allow the ability to create a _fat_ jar (aka: _uber-jar).
 Not sure this adds much value in off-line mode.
-*-native dependencies specified in pom.xml provide the C++ *.so files and are extracted to $DJL_CACHE_DIR
+*-native dependencies specified in pom.xml provide the C++ *.so files and are extracted to $DJL_CACHE_DIR.
 
-=== Reference
-. If you want to learn more about Quarkus, please visit its link:https://quarkus.io[website].
-. If you want to learn more about _Deep Java Library_, please visit its link:https://djl.ai[website]
-. link:https://github.com/deepjavalibrary/djl-demo/tree/master/development/fatjar[djl-demo fatjar] example
+link:https://github.com/deepjavalibrary/djl-demo/tree/master/development/fatjar[djl-demo fatjar] example
+
+
+
+
+
 
 ==== Procedure
 

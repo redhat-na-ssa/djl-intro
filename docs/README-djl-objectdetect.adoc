@@ -8,10 +8,28 @@
 
 :numbered:
 
-== Local
+== Architecture
+
+image::images/djl-object-detect-architecture.png[]
+
+As depicted in the above diagram, the demo functionality is split into the following components:
+
+. *Edge*
++
+Containerized Quarkus/DJL app that runs on a edge device enabled with a webcam.
+Periodically sends events via MQTT when state changes occur (ie:  DJL detects probability that # of detected objects has increased from 2 to 3).
+. *Web*
++
+MQTT broker deployed in OpenShift.  Broker has default MQTT port exposed via a _LoadBalancer_ service.  Also deployed to OpenShift is a Quarkus based app that subscribes to the MQTT broker topic and forwards those MQTT events to a web browser (as `Server Sent Events` (SSE)).
+
+== Edge app
 This application can run in your local environment.
 
 === Pre-reqs
+
+. *Webcam*
++
+Should be mounted to your operating system at a path such as:  `/dev/video0`
 
 . *GPU/CPU*
 +
@@ -80,9 +98,9 @@ $ mvn wrapper:wrapper
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
 
-== Linux Containers
+=== Linux Containers
 
-=== Pre-reqs:
+==== Pre-reqs:
 
 . *podman*
 +
@@ -118,8 +136,6 @@ $ sudo restorecon -R $DJL_CACHE_DIR_OCI
 
 $ podman unshare chown -R 185:185 $DJL_CACHE_DIR_OCI
 -----
-
-=== Object Detection
 
 ==== Create Linux Container
 
@@ -215,11 +231,8 @@ $ podman run \
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
-image::docs/images/djl-object-detect-mqtt-artemis-web-admin.png[]
 
-
-
-== OpenShift
+== Web app
 
 === Pre-reqs
 
@@ -244,9 +257,7 @@ ie: `dnf install helm`
 +
 ie: `dnf install curl`
 
-=== Procedure
-
-==== Deploy
+=== Deploy
 
 . Create a ConfigMap from the project's _application.properties_:
 +
@@ -284,4 +295,6 @@ $ oc get pod \
 +
 NOTE: The result should return the id of your GPU enabled node.
 
-==== Test
+== Run Demo
+
+image::images/djl-object-detect-mqtt-artemis-web-admin.png[]
