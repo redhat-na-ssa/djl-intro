@@ -16,9 +16,3 @@
   retries: 10
   delay: 30
   changed_when: false
-
-#- name: "upload fprint model to {{ application_name }} PVC from {{ djl_fprint_local_model_path }}"
-#  shell: |
-#    {{ openshift_cli }} cp {{ djl_fprint_local_model_path }} 
-
-

@@ -1,7 +1,7 @@
 ---
 
 # NOTE: In microshift with community olm installed, namespace will be:  operators
-namespace_amq_streams_operator: "operators"
+namespace_amq_streams_operator: "openshift-operators"
 
 namespace_kafka_cluster: "{{ project_name }}"
 

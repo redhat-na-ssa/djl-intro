@@ -64,10 +64,11 @@ artemis_service_name: artemis-mqtt-0-svc
 project_name: "{{ project_admin }}-djl"
 
 djl_modelmanager_name: djl-modelmanager
-djl_root_model_path: 
+djl_root_model_path: /mnt/model
 
 djl_fprint_app_name: djl-fprint
 djl_fprint_url: "http://{{ djl_fprint_app_name }}.{{ project_name }}:8080"
+djl_fprint_local_model_path: /home/jbride/Downloads/fingerprint/fingerprint/1/model.savedmodel
 
 djl_fprint_prediction_event_topic: fprint-prediction-event
 

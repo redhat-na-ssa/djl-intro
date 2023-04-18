@@ -16,4 +16,4 @@
       data:
         application.properties: "{{ aprops }}"
 
-# - import_tasks: deploy_from_image.yml
+- import_tasks: deploy_from_image.yml
