@@ -30,6 +30,10 @@
 
 - name: "upload fprint model to {{ pod_name }}:{{ djl_root_model_path }}"
   shell: |
-    {{ openshift_cli }} cp {{ djl_fprint_local_model_path }} {{ pod_name }}:{{djl_root_model_path }}
+    {{ openshift_cli }} cp {{ djl_fprint_local_model_path }} {{ pod_name }}:{{djl_root_model_path }} -n {{ namespace }}
 
+
+- name: scale down pod;  djl-fprint pod can not start while model-manager has the PVC locked.  Otherwise, use RWX PV
+  shell: |
+    {{ openshift_cli }} scale dc/{{ application_name }} --replicas=0 -n {{ namespace }}
 

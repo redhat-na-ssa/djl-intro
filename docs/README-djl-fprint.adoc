@@ -124,6 +124,8 @@ $ podman unshare chown -R 185:185 $DJL_CACHE_DIR_OCI
 
 ==== Create Linux Container
 
+TENSORFLOW_LIBRARY_PATH
+
 . Change directory into:  `djl-fprint`
 
 . Set an environment variable that specifies one of the possible deep learning engines:
@@ -253,4 +255,7 @@ $ oc get pod \
 +
 NOTE: The result should return the id of your GPU enabled node.
 
-==== Test
+=== GPU
+
+. link:https://github.com/deepjavalibrary/djl/issues/2554#issuecomment-1514796760[Maybe try CUDA 11.3]
+https://github.com/deepjavalibrary/djl/issues/2485

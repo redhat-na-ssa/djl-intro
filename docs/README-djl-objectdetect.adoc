@@ -22,6 +22,10 @@ Periodically sends events via MQTT when state changes occur (ie:  DJL detects pr
 +
 MQTT broker deployed in OpenShift.  Broker has default MQTT port exposed via a _LoadBalancer_ service.  Also deployed to OpenShift is a Quarkus based app that subscribes to the MQTT broker topic and forwards those MQTT events to a web browser (as `Server Sent Events` (SSE)).
 
+== DJL on _aarch64_
+
+link:https://github.com/deepjavalibrary/djl/issues/375[DJL Arm Support]
+
 == Edge app
 This application can run in your local environment.
 
@@ -96,6 +100,45 @@ $ mvn wrapper:wrapper
 . View RESTful API exposed by app:
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
+
+
+=== Fedora 38 aarch64
+
+link:https://github.com/deepjavalibrary/djl/issues/375#issuecomment-1200471807[DJL ARM support] is currently only offered for PyTorch and OnnxRuntime engines.
+
+. If runtime is on _aarch64_  (ie: Raspberry Pi 4) with a recent version of GLIBC (ie: in Fedora 38), you may need to replace the _libstdc++_ library that comes included with DJL's _2.0.0-cpu-precxx11-linux-aarch64_ project :
++
+-----
+$ ldd --version
+$ strings /usr/lib64/libstdc++.so.6.0.31 | grep '^CXXABI_'
+$ cp /usr/lib64/libstdc++.so.6.0.31 $HOME/.djl.ai/pytorch/2.0.0-cpu-precxx11-linux-aarch64/libstdc++.so.6
+-----
+
+. Doing so will prevent the following exception:
++
+-----
+22:58:33 ERROR [io.qu.ru.Application] (main) Failed to start application (with profile prod): java.lang.UnsatisfiedLinkError: /tmp/opencv_openpnp10653577782654499938/nu/pattern/opencv/linux/ARMv8/libopencv_java470.so: /home/jbride/.djl.ai/pytorch/2.0.0-cpu-precxx11-linux-aarch64/libstdc++.so.6: version `CXXABI_1.3.8' not found (required by /tmp/opencv_openpnp10653577782654499938/nu/pattern/opencv/linux/ARMv8/libopencv_java470.so)
+	at java.base/jdk.internal.loader.NativeLibraries.load(Native Method)
+	at java.base/jdk.internal.loader.NativeLibraries$NativeLibraryImpl.open(NativeLibraries.java:388)
+	at java.base/jdk.internal.loader.NativeLibraries.loadLibrary(NativeLibraries.java:232)
+	at java.base/jdk.internal.loader.NativeLibraries.loadLibrary(NativeLibraries.java:174)
+	at java.base/java.lang.ClassLoader.loadLibrary(ClassLoader.java:2389)
+	at java.base/java.lang.Runtime.load0(Runtime.java:755)
+	at java.base/java.lang.System.load(System.java:1953)
+	at nu.pattern.OpenCV$LocalLoader.<init>(OpenCV.java:330)
+	at nu.pattern.OpenCV$LocalLoader.<init>(OpenCV.java:326)
+	at nu.pattern.OpenCV$LocalLoader$Holder.<clinit>(OpenCV.java:336)
+	at nu.pattern.OpenCV$LocalLoader.getInstance(OpenCV.java:340)
+	at nu.pattern.OpenCV.loadLocally(OpenCV.java:323)
+	at nu.pattern.OpenCV$SharedLoader.<init>(OpenCV.java:217)
+	at nu.pattern.OpenCV$SharedLoader.<init>(OpenCV.java:189)
+	at nu.pattern.OpenCV$SharedLoader$Holder.<clinit>(OpenCV.java:261)
+	at nu.pattern.OpenCV$SharedLoader.getInstance(OpenCV.java:265)
+	at nu.pattern.OpenCV.loadShared(OpenCV.java:183)
+	at org.acme.apps.LiveObjectDetectionResource.startResource(LiveObjectDetectionResource.java:116)
+-----
+
+An alternative might be to install link:https://docs.djl.ai/engines/pytorch/pytorch-engine/index.html#load-your-own-pytorch-native-library[pytorch on the host] and specify the _PYTORCH_LIBRARY_PATH_ environment variable.
 
 
 === Linux Containers

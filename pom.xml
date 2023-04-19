@@ -21,7 +21,7 @@
     <quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
-    <djl.version>0.21.0</djl.version>
+    <djl.version>0.22.0</djl.version>
   </properties>
 
   <repositories>

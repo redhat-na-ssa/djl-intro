@@ -200,14 +200,12 @@
           <artifactId>tensorflow-native-cpu</artifactId>
           <classifier>linux-x86_64</classifier>
           <scope>runtime</scope>
+          <version>2.7.0</version>
         </dependency>
       </dependencies>
     </profile>
     <profile>
       <id>tensorflow-gpu</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <dependencies>
         <dependency>
           <groupId>org.bytedeco</groupId>
@@ -237,6 +235,8 @@
             <groupId>ai.djl.tensorflow</groupId>
             <artifactId>tensorflow-native-cu113</artifactId>
             <classifier>linux-x86_64</classifier>
+            <scope>runtime</scope>
+            <version>2.7.0</version>
         </dependency>
       </dependencies>
     </profile>

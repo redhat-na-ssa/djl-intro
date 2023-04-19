@@ -1,0 +1,12 @@
+---
+
+application_name: "{{ djl_odetect_web_app_name }}"
+
+service_image: "quay.io/redhat_naps_da/{{ application_name }}"
+service_image_tag: 0.0.1
+
+application_configmap: "{{ application_name }}"
+
+# https://provectus.github.io/kafka-ui/
+helm_tar_url: "/u01/labs/mw/redhat-na-ssa/djl-intro/djl-objectdetect/web/target/helm/openshift/{{ application_name }}"
+# helm_tar_url: "https://github.com/redhat-na-ssa/djl-intro/raw/main/{{ application_name }}/helm/{{ application_name }}-{{ service_image_tag }}.tar.gz"

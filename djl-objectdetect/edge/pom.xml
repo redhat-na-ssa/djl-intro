@@ -195,7 +195,37 @@
     </profile>
 
     <profile>
-      <id>pytorch</id>
+      <id>pytorch-linux-x86_64</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-model-zoo</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-engine</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-jni</artifactId>
+          <scope>runtime</scope>
+          <version>2.0.0-0.22.0</version>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-native-cpu</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <scope>runtime</scope>
+          <version>2.0.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>pytorch-auto</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
@@ -216,18 +246,13 @@
           <artifactId>pytorch-jni</artifactId>
           <scope>runtime</scope>
         </dependency>
-        <dependency>
-          <groupId>ai.djl.pytorch</groupId>
-          <artifactId>pytorch-native-cpu</artifactId>
-          <classifier>linux-x86_64</classifier>
-          <scope>runtime</scope>
-        </dependency>
       </dependencies>
     </profile>
 
     <profile>
 
       <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
+      <!-- MxNet on Raspberry Pi 4B:  https://github.com/deepjavalibrary/djl/issues/860 -->
       <id>mxnet</id>
 
       <dependencies>
@@ -294,6 +319,7 @@
           <artifactId>tensorflow-native-cpu</artifactId>
           <classifier>linux-x86_64</classifier>
           <scope>runtime</scope>
+          <version>2.7.0</version>
         </dependency>
 
         <!-- Use when building for GPU -->
@@ -302,6 +328,7 @@
                     <artifactId>tensorflow-native-cu113</artifactId>
                     <classifier>linux-x86_64</classifier>
                      <scope>runtime</scope>
+            <version>2.7.0</version>
                 </dependency -->
       </dependencies>
     </profile>
