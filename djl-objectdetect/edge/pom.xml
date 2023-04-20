@@ -225,7 +225,7 @@
     </profile>
 
     <profile>
-      <id>pytorch-auto</id>
+      <id>pytorch</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>

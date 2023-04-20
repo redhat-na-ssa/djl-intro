@@ -99,7 +99,7 @@ $ podman login quay.io
 
 
 . To support link:https://github.com/deepjavalibrary/djl-serving/blob/master/serving/docs/configurations.md#djl-settings[off-line mode] of the DJL engines, a pre-seeded DJL cache will be mounted to the linux container.  
-emporary directories and/or json files might be generated in this DJL cache.  
+Temporary directories and/or json files might be generated in this DJL cache.  
 This DJL cache directory should be made writable by the container process for the following reasons:
 
 .. Extraction of native C++ libraries included in DJL `fatjar` to $DJL_CACHE_DIR
@@ -109,22 +109,48 @@ This DJL cache directory should be made writable by the container process for th
 +
 -----
 $ export DJL_CACHE_DIR_OCI=/u02/djl.ai.oci \
-    && mkdir -p $DJL_CACHE_DIR_OCI
+    && sudo mkdir -p $DJL_CACHE_DIR_OCI
 
 $ sudo semanage fcontext -a \
         -t container_file_t "$DJL_CACHE_DIR_OCI(/.*)?"
 
 $ sudo restorecon -R $DJL_CACHE_DIR_OCI
 
-$ podman unshare chown -R 185:185 $DJL_CACHE_DIR_OCI
+$ sudo podman unshare chown -R 185:185 $DJL_CACHE_DIR_OCI
 -----
 
+=== CPU
 
-=== Fingerprint Serving
 
-==== Create Linux Container
 
-TENSORFLOW_LIBRARY_PATH
+. Change directory into:  `djl-fprint`
+
+. Set an environment variable that specifies one of the possible deep learning engines:
++
+-----
+$ djl_engine=tensorflow
+-----
++
+NOTE:  The model (and subsequently the engine) is Tensorflow specific
+
+. Set an environment variable that specifies the processor type:
++
+-----
+$ djl_processor=cpu
+-----
+
+. Build container and generate openshift/helm configs:
++
+-----
+$ ./mvnw clean package \
+        -P$djl_engine-$djl_processor \
+        -Dquarkus.application.name=djl-fprint-$djl_engine-$djl_processor \
+        -DskipTests \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true
+-----
+
+=== GPU
 
 . Change directory into:  `djl-fprint`
 
@@ -156,6 +182,9 @@ $ cp config/kube/openshift-$djl_processor.yml src/main/kubernetes/openshift.yml 
         -Dquarkus.container-image.push=true
 -----
 
+. link:https://github.com/deepjavalibrary/djl/issues/2554#issuecomment-1514796760[Maybe try CUDA 11.3]
+https://github.com/deepjavalibrary/djl/issues/2485
+
 ==== Execution
 
 . Set path to model path on local filesystem:
@@ -172,6 +201,14 @@ NOTE:  Model can be downloaded link:https://github.com/redhat-na-ssa/demo-datasc
 $ djl_offline=true
 -----
 
+. Set TENSORFLOW_LIBRARY_PATH env var:
++
+-----
+$ TENSORFLOW_LIBRARY_PATH=/usr/local/cuda-11.8/targets/x86_64-linux/lib/
+-----
++
+As per the following NVIDIA package: `cuda-cudart-devel-11-8`
+
 . Run linux container using designated deep learning engine:
 +
 -----
@@ -181,6 +218,7 @@ $ podman run \
     -p 8080:8080 \
     -p 5005:5005 \
     -e JAVA_ENABLE_DEBUG="true" \
+    -e TENSORFLOW_LIBRARY_PATH=$TENSORFLOW_LIBRARY_PATH \
     -e JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Doffline=$djl_offline" \
     -v $djl_model_dir:/mnt/model:z \
     quay.io/redhat_naps_da/djl-fprint-$djl_engine-$djl_processor:0.0.1
@@ -189,6 +227,8 @@ $ podman run \
 . View RESTful API exposed by app:
 +
 Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
+
+
 
 == OpenShift
 
@@ -255,7 +295,4 @@ $ oc get pod \
 +
 NOTE: The result should return the id of your GPU enabled node.
 
-=== GPU
 
-. link:https://github.com/deepjavalibrary/djl/issues/2554#issuecomment-1514796760[Maybe try CUDA 11.3]
-https://github.com/deepjavalibrary/djl/issues/2485

@@ -2,49 +2,48 @@ package org.acme;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseBroadcaster;
 import javax.ws.rs.sse.SseEventSink;
 
 import io.quarkus.runtime.StartupEvent;
-import io.quarkus.vertx.ConsumeEvent;
 
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-import org.acme.AppUtils;
+// https://www.baeldung.com/java-ee-jax-rs-sse
 
-//https://github.com/limadelrey/quarkus-sse/blob/master/src/main/java/org/limadelrey/quarkus/sse/SimpleSSE.java
+// DO NOT USE:   Attempts to send messages to SseEventSinks that have already closed
+//   https://github.com/quarkusio/quarkus/issues/23997
 
 @ApplicationScoped
-@Path("djl-object-detect-web")
-public class ObjectDetectWebAppMain {
+@Path("djl-object-detect-broadcast")
+public class ObjectDetectWebAppBroadcaster {
 
-    Logger log = Logger.getLogger("ObjectDetectWeAppMain");
+    Logger log = Logger.getLogger("ObjectDetectWeAppBroadcaster");
 
     private OutboundSseEvent.Builder eventBuilder;
 
     @Context
     protected Sse sse;
 
-    private SseEventSink sseEventSink = null;
+    private SseBroadcaster sseBroadcaster = null;
 
 
     void startup(@Observes StartupEvent event)  {
         this.eventBuilder = sse.newEventBuilder();
+        this.sseBroadcaster = sse.newBroadcaster();
     }
 
-    @Incoming(AppUtils.LIVE_OBJECT_DETECTION)
+    //@Incoming(AppUtils.LIVE_OBJECT_DETECTION)
     public void consumeLiveObjectDetect(byte[] eventByte){
-        if(sseEventSink != null && !sseEventSink.isClosed()){
+        if(sseBroadcaster != null){
             log.info("consumeLiveObjectDetect() received message");
 
             String eventString = new String(eventByte);
@@ -54,18 +53,18 @@ public class ObjectDetectWebAppMain {
               .data(eventString)
               .reconnectDelay(3000)
               .build();
-          sseEventSink.send(sseEvent);
+          sseBroadcaster.broadcast(sseEvent);
         }
 
     }
 
-    // Test:   curl -N http://localhost:9080/djl-object-detect-webapp/event/objectDetectionStream
+    // Test:   curl -N http://localhost:9080/djl-object-detect-web/event/objectDetectionStream
     @GET
     @Path("/event/objectDetectionStream")
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public void consumeSSE (@Context SseEventSink sseEventSink) {
         log.info("Starting sseEventSink "+sseEventSink);
-        this.sseEventSink = sseEventSink;
+        this.sseBroadcaster.register(sseEventSink);
     }
 
 }

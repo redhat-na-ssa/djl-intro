@@ -1,4 +1,4 @@
-const evtSource = new EventSource("djl-object-detect-webapp/event/objectDetectionStream");
+const evtSource = new EventSource("djl-object-detect-web/event/objectDetectionStream");
 
 evtSource.onmessage = (e) => {
 

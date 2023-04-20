@@ -18,5 +18,7 @@ public class AppUtils {
     public static final String DEVICE_ID = "device_id";
     public static final String HOSTNAME = "HOSTNAME";
     public static final String BASE64_DETECTED_IMAGE = "base64DetectedImage";
+    public static final String CAPTURE_TIMESTAMP = "CAPTURE_TIMESTAMP";
+    public static final String CAPTURE_COUNT = "CAPTURE_COUNT";
     
 }

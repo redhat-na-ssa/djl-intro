@@ -13,3 +13,10 @@
     name: "{{ application_configmap }}"
     namespace: "{{ namespace }}"
     kind: ConfigMap
+
+- name: "delete route {{ application_name }}"
+  k8s:
+    state: absent
+    name: "{{ application_name }}"
+    namespace: "{{ namespace }}"
+    kind: Route

@@ -2,7 +2,9 @@
 
 application_name: "{{ djl_fprint_app_name }}"
 
-app_build_name: "{{ djl_fprint_app_name }}-tensorflow-gpu"
+djl_engine: tensorflow
+djl_processor: cpu
+app_build_name: "{{ djl_fprint_app_name }}-{{ djl_engine }}-{{ djl_processor }}"
 
 service_image: "quay.io/redhat_naps_da/{{ djl_fprint_app_name }}"
 service_image_tag: 0.0.1

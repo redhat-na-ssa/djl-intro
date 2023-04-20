@@ -17,7 +17,7 @@ services:
 
   ftools:
     container_name: ftools
-    image: quay.io/jbride/ftools:0.0.3
+    image: quay.io/jbride/ftools:0.0.6
     networks:
       - rht-ml
 

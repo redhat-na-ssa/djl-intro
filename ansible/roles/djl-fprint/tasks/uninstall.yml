@@ -14,9 +14,9 @@
     namespace: "{{ namespace }}"
     kind: ConfigMap
 
-- name: "delete secret {{ sso_db_service_name }}"
+- name: "delete route {{ application_name }}"
   k8s:
     state: absent
-    name: "{{ sso_db_service_name }}"
+    name: "{{ application_name }}"
     namespace: "{{ namespace }}"
-    kind: ConfigMap
+    kind: Route

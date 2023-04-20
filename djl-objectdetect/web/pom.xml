@@ -9,8 +9,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
   <groupId>com.redhat.na.ssa</groupId>
-  <artifactId>djl-objectdetect-webapp</artifactId>
-  <version>0.0.1</version>
+  <artifactId>djl-objectdetect-web</artifactId>
+  <version>0.0.2</version>
   <dependencies>
    
     <dependency>

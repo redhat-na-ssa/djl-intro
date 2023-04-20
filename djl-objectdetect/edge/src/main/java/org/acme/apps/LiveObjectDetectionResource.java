@@ -2,12 +2,19 @@ package org.acme.apps;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -62,8 +69,11 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     private static final String PYTORCH="pytorch";
     private static final String TENSORFLOW="tensorflow";
     private static final String MXNET="mxnet";
+    private static final String PATTERN_FORMAT = "yyyy.MM.dd HH:mm:ss";
 
     private static Logger log = Logger.getLogger("LiveObjectDetectionResource");
+
+    AtomicInteger schedulerCount = new AtomicInteger();
 
     @ConfigProperty(name = "org.acme.objecdetection.image.directory", defaultValue="/tmp/org.acme.objectdetection")
     String oDetectionDirString;
@@ -71,11 +81,17 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objectdetection.video.capture.device.id", defaultValue = "0")
     int videoCaptureDevice;
 
-    @ConfigProperty(name = "org.acme.objectdetection.write.unadulted.image.to.disk", defaultValue = "False")
-    boolean writeUnAdulatedImageToDisk;
+    @ConfigProperty(name = "org.acme.objectdetection.write.unadultered.image.to.disk", defaultValue = "False")
+    boolean writeUnAdulateredImageToDisk;
+
+    @ConfigProperty(name = "org.acme.objectdetection.write.modified.image.to.disk", defaultValue = "False")
+    boolean writeModifiedImageToDisk;
 
     @ConfigProperty(name = "org.acme.objectdetection.predictAtStartup", defaultValue = "True")
     boolean predict;
+
+    @ConfigProperty(name = "org.acme.objectdetection.continuousPublish", defaultValue = "False")
+    boolean continuousPublish;
 
     @Inject
     CriteriaFilter cFilters;
@@ -88,6 +104,8 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     VideoCapture vCapture = null;
     private int detectionCountState = -1;
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT).withZone(ZoneId.systemDefault());
 
     @PostConstruct
     public void startResource() {
@@ -138,22 +156,34 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     }
 
     // Capture raw video device snapshots at periodic intervals
-    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delay = 5, delayUnit = TimeUnit.SECONDS)
+    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delayed = "{org.acme.objectdetection.initial.capture.delay.seconds}", delayUnit = TimeUnit.SECONDS)
     void scheduledCapture() {
         
         // Capture image from webcam
+        int captureCount = schedulerCount.incrementAndGet();
+        Instant startCaptureTime = Instant.now();
+        log.info("about to capture: "+captureCount);
         Mat unboxedMat = new Mat();
         boolean captured = vCapture.read(unboxedMat);
-        if (captured)
-            bus.publish(AppUtils.CAPTURED_IMAGE, unboxedMat);
+        
+        if (captured) {
+            VideoCapturePayload cPayload = new VideoCapturePayload();
+            cPayload.setMat(unboxedMat);
+            cPayload.setCaptureCount(captureCount);
+            cPayload.setStartCaptureTime(startCaptureTime);
+            bus.publish(AppUtils.CAPTURED_IMAGE, cPayload);
+        }
 
     }
 
 
     // Consume raw video snapshots and apply prediction analysis
     @ConsumeEvent(AppUtils.CAPTURED_IMAGE)
-    public void processCapturedEvent(Mat unboxedMat){
+    public void processCapturedEvent(VideoCapturePayload capturePayload){
         if(this.predict){
+            Mat unboxedMat = capturePayload.getMat();
+            Instant startCaptureTime = capturePayload.getStartCaptureTime();
+            int captureCount = capturePayload.getCaptureCount();
             Predictor<Image, DetectedObjects> predictor = null;
             try{
     
@@ -166,42 +196,50 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                
                 // Depending if there is a state change of object detection, generate an event
                 log.debugv("{0} , {1}", detectionCountState, dCount); 
-                if(dCount != 0 && dCount != detectionCountState){
+                if(continuousPublish || (dCount != 0 && dCount != detectionCountState)){
                     ObjectMapper oMapper = super.getObjectMapper();
                     ObjectNode rNode = oMapper.createObjectNode();
                     rNode.put(AppUtils.DETECTION_COUNT, dCount);
                     long time = new Date().getTime();
-    
+                    
                     rNode.put(AppUtils.ID, time);
                     rNode.put(AppUtils.DEVICE_ID, System.getenv(AppUtils.HOSTNAME));
-                    if(writeUnAdulatedImageToDisk){
+                    if(writeUnAdulateredImageToDisk){
                         // Write un-boxed image to local file system
                         File uBoxedImageFile = new File(fileDir,  "unAdulteredImage-"+time +".png");
                         BufferedImage uBoxedImage = toBufferedImage(unboxedMat);
                         ImageIO.write(uBoxedImage, "png", uBoxedImageFile);
                         rNode.put(AppUtils.UNADULTERED_IMAGE_FILE_PATH, uBoxedImageFile.getAbsolutePath());
                     }
-    
-                    Classifications.Classification dClass = detections.best();
-                    rNode.put(AppUtils.DETECTED_OBJECT_CLASSIFICATION, dClass.getClassName());
-                    rNode.put(AppUtils.DETECTED_OBJECT_PROBABILITY, dClass.getProbability());
-    
-        
-                    // Annotate video capture image w/ any detected objects
-                    img.drawBoundingBoxes(detections);
-        
-                    // Write boxed image to local file system
-                    Mat boxedImage = (Mat)img.getWrappedImage();
-                    File boxedImageFile = new File(fileDir,  "boxedImage-"+time +".png");
-                    BufferedImage bBoxedImage = toBufferedImage(boxedImage);
-                    ImageIO.write(bBoxedImage, "png", boxedImageFile);
-                    rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
 
-                    // Encode binary image to Base64 string and add to payload
-                    byte[] base64encodedImage = FileUtils.readFileToByteArray(boxedImageFile);
-                    String stringEncodedImage = Base64.getEncoder().encodeToString(base64encodedImage);
-                    rNode.put(AppUtils.BASE64_DETECTED_IMAGE, stringEncodedImage);
     
+                    try {
+                        Classifications.Classification dClass = detections.best();
+                        rNode.put(AppUtils.DETECTED_OBJECT_CLASSIFICATION, dClass.getClassName());
+                        rNode.put(AppUtils.DETECTED_OBJECT_PROBABILITY, dClass.getProbability());
+        
+            
+                        // Annotate video capture image w/ any detected objects
+                        img.drawBoundingBoxes(detections);
+            
+                        Mat boxedImage = (Mat)img.getWrappedImage();
+                        File boxedImageFile = new File(fileDir,  "boxedImage-"+time +".png");
+    
+                        // Write boxed image to local file system
+                        BufferedImage bBoxedImage = toBufferedImage(boxedImage);
+                        ImageIO.write(bBoxedImage, "png", boxedImageFile);
+                        rNode.put(AppUtils.DETECTED_IMAGE_FILE_PATH, boxedImageFile.getAbsolutePath());
+    
+    
+                        // Encode binary image to Base64 string and add to payload
+                        byte[] base64encodedImage = FileUtils.readFileToByteArray(boxedImageFile);
+                        String stringEncodedImage = Base64.getEncoder().encodeToString(base64encodedImage);
+                        rNode.put(AppUtils.BASE64_DETECTED_IMAGE, stringEncodedImage);
+                    }catch(NoSuchElementException x) {
+                        log.warn("Caught NoSuchElementException when attempting to classify objects in image");
+                    }
+                    rNode.put(AppUtils.CAPTURE_COUNT, captureCount);
+                    rNode.put(AppUtils.CAPTURE_TIMESTAMP, formatter.format(startCaptureTime));
                     bus.publish(AppUtils.LIVE_OBJECT_DETECTION, rNode.toPrettyString());
                     this.detectionCountState = dCount;
                 }else if(dCount == 0 && dCount != detectionCountState){
@@ -214,6 +252,8 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 if(predictor != null)
                     predictor.close();
             }
+            Duration timeElapsed = Duration.between(startCaptureTime, Instant.now());
+            log.info(captureCount + " : "+ timeElapsed+" : "+this.detectionCountState); 
         }
     }
 

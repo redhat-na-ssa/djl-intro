@@ -7,8 +7,8 @@
     chart_ref: "{{ helm_tar_url }}"
     wait: True
 
-- name: "wait until {{ application_name }} application is up and running in {{ namespace }}"
-  shell: "{{ openshift_cli }} get dc {{ application_name }} -o template --template={{ json_template }} -n {{ namespace }}"
+- name: "wait until {{ app_build_name }} application is up and running in {{ namespace }}"
+  shell: "{{ openshift_cli }} get dc {{ app_build_name }} -o template --template={{ json_template }} -n {{ namespace }}"
   vars:
     json_template: '\{\{.status.readyReplicas\}\}'
   register: result
@@ -16,3 +16,10 @@
   retries: 10
   delay: 30
   changed_when: false
+
+- name: "deploy route {{ application_name }} route "
+  kubernetes.core.k8s:
+    state: present
+    kind: Route
+    definition: "{{ lookup('template', 'templates/route.yml') | from_yaml }}"
+    namespace: "{{ namespace }}"

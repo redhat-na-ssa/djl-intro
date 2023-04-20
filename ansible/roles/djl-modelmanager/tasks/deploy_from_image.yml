@@ -37,3 +37,9 @@
   shell: |
     {{ openshift_cli }} scale dc/{{ application_name }} --replicas=0 -n {{ namespace }}
 
+- name: "deploy route {{ application_name }} route "
+  kubernetes.core.k8s:
+    state: present
+    kind: Route
+    definition: "{{ lookup('template', 'templates/route.yml') | from_yaml }}"
+    namespace: "{{ namespace }}"

@@ -24,9 +24,3 @@ spec:
               nvidia.com/gpu: '1'
             requests:
               nvidia.com/gpu: '1'
-      volumes:
-      - name: models
-        persistentVolumeClaim:
-          claimName: djl-modelmanager
-          readOnly: true
-        

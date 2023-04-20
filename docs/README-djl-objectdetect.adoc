@@ -106,7 +106,8 @@ Open a browser tab and navigate to:  `localhost:8080/q/swagger-ui`
 
 link:https://github.com/deepjavalibrary/djl/issues/375#issuecomment-1200471807[DJL ARM support] is currently only offered for PyTorch and OnnxRuntime engines.
 
-. If runtime is on _aarch64_  (ie: Raspberry Pi 4) with a recent version of GLIBC (ie: in Fedora 38), you may need to replace the _libstdc++_ library that comes included with DJL's _2.0.0-cpu-precxx11-linux-aarch64_ project :
+. If runtime is on _aarch64_  (ie: Raspberry Pi 4), the recommend DJL engine is: _pytorch_.
+. If running on a recent version of GLIBC (ie: in Fedora 38), you may need to replace the _libstdc++_ library that comes included with DJL's _2.0.0-cpu-precxx11-linux-aarch64_ project :
 +
 -----
 $ ldd --version
@@ -341,3 +342,12 @@ NOTE: The result should return the id of your GPU enabled node.
 == Run Demo
 
 image::images/djl-object-detect-mqtt-artemis-web-admin.png[]
+
+
+. View video capture events in browser
+
+.. Point your browser to the output of the following:
++
+-----
+$ echo -en "\nhttps://$(oc get route djl-objectdetect-web -n user1-djl --template='{{ .spec.host }}')/liveObject.html\n"
+-----
