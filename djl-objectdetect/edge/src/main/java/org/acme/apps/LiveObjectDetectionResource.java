@@ -24,7 +24,9 @@ import javax.ws.rs.core.Response;
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 import org.acme.AppUtils;
@@ -86,13 +88,16 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     boolean writeModifiedImageToDisk;
 
     @ConfigProperty(name = "org.acme.objectdetection.predictAtStartup", defaultValue = "True")
-    boolean predict;
+    boolean predictAtStartup;
 
     @ConfigProperty(name = "org.acme.objectdetection.continuousPublish", defaultValue = "False")
     boolean continuousPublish;
 
     @ConfigProperty(name = "org.acme.objectdetection.prediction.change.threshold", defaultValue = "0.1")
     double predictionThreshold;
+
+    @ConfigProperty(name = "org.acme.objectdetection.video.capture.interval.millis", defaultValue = "50")
+    int videoCaptureIntevalMillis;
 
     @Inject
     CriteriaFilter cFilters;
@@ -107,6 +112,9 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     private VideoCapturePayload previousCapture;
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT).withZone(ZoneId.systemDefault());
+
+    Mat unboxedMat = null;
+    Cancellable multiCancellable = null;
 
     @PostConstruct
     public void startResource() {
@@ -143,6 +151,17 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
              *      ai.djl.tensorflow.engine.TfNDManager
              */
             NDManager ndManager = NDManager.newBaseManager();
+
+            unboxedMat = new Mat();
+
+            // Keep pace with video buffer
+            Multi<Long> vCaptureStreamer = Multi.createFrom().ticks().every((Duration.ofMillis(videoCaptureIntevalMillis))).onCancellation().invoke( () -> {
+                log.info("just cancelled video capture streamer");
+            });
+            multiCancellable = vCaptureStreamer.subscribe().with( (i) -> {
+                vCapture.read(unboxedMat);
+            });
+
             log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}  and OS groups {3}", 
                 this.videoCaptureDevice, 
                 vCapture.isOpened(),
@@ -157,35 +176,35 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     }
 
     // Capture raw video device snapshots at periodic intervals
-    @Scheduled(every = "{org.acme.objectdetection.delay.between.capture.seconds}" , delayed = "{org.acme.objectdetection.initial.capture.delay.seconds}", delayUnit = TimeUnit.SECONDS)
+    @Scheduled(every = "{org.acme.objectdetection.delay.between.evaluation.seconds}" , delayed = "{org.acme.objectdetection.initial.capture.delay.seconds}", delayUnit = TimeUnit.SECONDS)
     void scheduledCapture() {
         
-        if(!this.predict){
+        if(!this.predictAtStartup){
             return;
         }
 
         // Capture image from webcam
         int captureCount = schedulerCount.incrementAndGet();
         Instant startCaptureTime = Instant.now();
-        Mat unboxedMat = new Mat();
-        boolean captured = vCapture.read(unboxedMat);
-        
-        if (captured) {
+
+        if (!unboxedMat.empty()) {
+            Mat matCopy = unboxedMat.clone();
             VideoCapturePayload cPayload = new VideoCapturePayload();
-            cPayload.setMat(unboxedMat);
             cPayload.setCaptureCount(captureCount);
             cPayload.setStartCaptureTime(startCaptureTime);
+            cPayload.setMat(matCopy);
             bus.publish(AppUtils.CAPTURED_IMAGE, cPayload);
         }
 
     }
 
-
     // Consume raw video snapshots and apply prediction analysis
     @ConsumeEvent(AppUtils.CAPTURED_IMAGE)
     public void processCapturedEvent(VideoCapturePayload capturePayload){
 
-        Mat unboxedMat = capturePayload.getMat();
+
+       
+        
         Instant startCaptureTime = capturePayload.getStartCaptureTime();
         int captureCount = capturePayload.getCaptureCount();
         Predictor<Image, DetectedObjects> predictor = null;
@@ -193,6 +212,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
             // Determine presence of objects from raw video snapshot
             ImageFactory factory = ImageFactory.getInstance();
+            Mat unboxedMat = capturePayload.getMat();
             Image img = factory.fromImage(unboxedMat);
             predictor = model.newPredictor();
             DetectedObjects detections = predictor.predict(img);
@@ -262,6 +282,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     @PreDestroy
     public void shutdown() {
+        multiCancellable.cancel();
         if(vCapture != null && vCapture.isOpened()){
             vCapture.release();
             log.infov("shutdown() video capture device = {0}", this.videoCaptureDevice );
@@ -300,7 +321,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     public Uni<Response> stopPrediction() {
 
         log.info("stopPrediction");
-        this.predict=false;
+        this.predictAtStartup=false;
         this.previousCapture=null;
         Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
         return Uni.createFrom().item(eRes);
@@ -308,7 +329,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     
     public Uni<Response> predict() {
         log.info("will now begin to predict on video capture stream");
-        this.predict=true;
+        this.predictAtStartup=true;
         Response eRes = Response.status(Response.Status.OK).entity(this.videoCaptureDevice).build();
         return Uni.createFrom().item(eRes);
     }
