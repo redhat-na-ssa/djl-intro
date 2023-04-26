@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
-         child.project.url.inherit.append.path="false">
+     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" >
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.redhat.na.ssa</groupId>
@@ -61,6 +60,150 @@
         <module>djl-iclassification</module>
         <module>djl-fprint</module>
         <module>djl-objectdetect</module>
-    </modules>
+  </modules>
+
+  <profiles>
+    <profile>
+      <id>native</id>
+      <activation>
+        <property>
+          <name>native</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>${surefire-plugin.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+                <configuration>
+                  <systemPropertyVariables>
+                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                    <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                    <maven.home>${maven.home}</maven.home>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <quarkus.package.type>native</quarkus.package.type>
+      </properties>
+    </profile>
+
+    <!-- https://djl.ai/engines/pytorch/pytorch-engine/ -->
+    <profile>
+      <id>pytorch</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-model-zoo</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-engine</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>pytorch-gpu</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-model-zoo</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-native-cu113</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <version>1.11.0</version>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-jni</artifactId>
+          <version>1.13.1-0.22.1</version>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- http://djl.ai/engines/mxnet/mxnet-engine/ -->
+    <profile>
+      <id>mxnet</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-model-zoo</artifactId>
+      <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+      <artifactId>mxnet-engine</artifactId>
+      <version>0.22.1</version>
+      <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>mxnet-gpu</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-model-zoo</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.mxnet</groupId>
+          <artifactId>mxnet-native-cu112mkl</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <version>1.9.1</version>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- http://djl.ai/engines/tensorflow/tensorflow-engine/ -->
+    <profile>
+      <id>tensorflow</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-model-zoo</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-engine</artifactId>
+          <version>0.22.1</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>tensorflow-gpu</id>
+      <dependencies>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-model-zoo</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>ai.djl.tensorflow</groupId>
+          <artifactId>tensorflow-native-cu113</artifactId>
+          <classifier>linux-x86_64</classifier>
+          <version>2.7.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>
