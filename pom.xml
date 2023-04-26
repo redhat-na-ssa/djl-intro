@@ -20,7 +20,7 @@
     <quarkus.platform.version>2.16.6.Final</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
-    <djl.version>0.22.0</djl.version>
+    <djl.version>0.22.1</djl.version>
   </properties>
 
   <repositories>
@@ -143,13 +143,13 @@
         <dependency>
           <groupId>ai.djl.mxnet</groupId>
           <artifactId>mxnet-model-zoo</artifactId>
-      <scope>runtime</scope>
-        </dependency>
+          <scope>runtime</scope>
+          </dependency>
         <dependency>
           <groupId>ai.djl.mxnet</groupId>
-      <artifactId>mxnet-engine</artifactId>
-      <version>0.22.1</version>
-      <scope>runtime</scope>
+          <artifactId>mxnet-engine</artifactId>
+          <version>0.22.1</version>
+          <scope>runtime</scope>
         </dependency>
       </dependencies>
     </profile>
