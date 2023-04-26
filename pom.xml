@@ -101,9 +101,6 @@
     <!-- https://djl.ai/engines/pytorch/pytorch-engine/ -->
     <profile>
       <id>pytorch</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <dependencies>
         <dependency>
           <groupId>ai.djl.pytorch</groupId>
@@ -125,15 +122,15 @@
         </dependency>
         <dependency>
           <groupId>ai.djl.pytorch</groupId>
-          <artifactId>pytorch-native-cu113</artifactId>
+          <artifactId>pytorch-native-cu118</artifactId>
           <classifier>linux-x86_64</classifier>
-          <version>1.11.0</version>
+          <version>2.0.0</version>
           <scope>runtime</scope>
         </dependency>
         <dependency>
           <groupId>ai.djl.pytorch</groupId>
           <artifactId>pytorch-jni</artifactId>
-          <version>1.13.1-0.22.1</version>
+          <version>2.0.0-0.22.1</version>
           <scope>runtime</scope>
         </dependency>
       </dependencies>
@@ -198,6 +195,11 @@
         </dependency>
         <dependency>
           <groupId>ai.djl.tensorflow</groupId>
+          <!-- As per https://mvnrepository.com/artifact/ai.djl.tensorflow, appears that JNI wrappers for only the following cuda versions are available:
+               cuda-10.1
+               cuda-11.0
+               cuda-11.3
+          -->
           <artifactId>tensorflow-native-cu113</artifactId>
           <classifier>linux-x86_64</classifier>
           <version>2.7.0</version>
