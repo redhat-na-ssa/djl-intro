@@ -29,12 +29,12 @@ import ai.djl.translate.Translator;
 
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.imaging.Imaging;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.core.Response;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.Response;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;

@@ -1,14 +1,15 @@
 package org.acme;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 @ApplicationScoped
 @Path("djl-object-detect-web")
@@ -25,7 +26,7 @@ public class ObjectDetectWebAppBroadcaster {
     @GET
     @Path("/event/objectDetectionStream")
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    //@RestStreamElementType(MediaType.TEXT_PLAIN)
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> consumeSSE () {
         log.info("consumeSSE()");
         return this.sseStream;

@@ -2,13 +2,13 @@ package org.acme;
 
 import java.time.Duration;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import io.quarkus.test.junit.QuarkusTest;

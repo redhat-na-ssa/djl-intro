@@ -1,6 +1,6 @@
 package org.acme.apps;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import ai.djl.repository.zoo.ZooModel;
 import io.smallrye.mutiny.Uni;

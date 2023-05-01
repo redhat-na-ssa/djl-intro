@@ -7,19 +7,19 @@
   <parent>    
       <groupId>com.redhat.na.ssa</groupId>
       <artifactId>djl-objectdetect</artifactId>
-      <version>0.0.1</version>
+      <version>3.0.0</version>
       <relativePath>../pom.xml</relativePath>
   </parent>
   <groupId>com.redhat.na.ssa</groupId>
   <artifactId>djl-objectdetect-edge</artifactId>
-  <version>0.0.3</version>
+  <version>3.0.0</version>
 
   <dependencies>
 
     <dependency>
       <groupId>com.redhat.na.ssa</groupId>
       <artifactId>djl-base</artifactId>
-      <version>0.0.1</version>
+      <version>3.0.0</version>
     </dependency>
 
     <dependency>
@@ -83,7 +83,7 @@
     <dependency>
       <groupId>io.quarkiverse.helm</groupId>
       <artifactId>quarkus-helm</artifactId>
-      <version>0.2.0</version>
+      <version>1.0.5</version>
     </dependency>
 
     <dependency>

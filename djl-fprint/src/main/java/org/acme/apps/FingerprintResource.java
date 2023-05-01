@@ -13,12 +13,11 @@ import java.util.Map.Entry;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics;
 import java.io.InputStream;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.smallrye.mutiny.Uni;
 

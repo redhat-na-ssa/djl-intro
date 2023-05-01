@@ -3,7 +3,7 @@ package org.acme;
 
 import static org.awaitility.Awaitility.await;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.test.common.QuarkusTestResource;
