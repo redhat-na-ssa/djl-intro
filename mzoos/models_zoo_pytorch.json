@@ -72,6 +72,9 @@
         "backbone:resnet50",
         "dataset:coco"
       ]
+    },
+    {
+      "yolov5s , 0.0.1": []
     }
   ],
   "cv/semantic_segmentation": [
