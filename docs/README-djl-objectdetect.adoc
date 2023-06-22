@@ -141,6 +141,12 @@ $ cp /usr/lib64/libstdc++.so.6.0.31 $HOME/.djl.ai/pytorch/2.0.0-cpu-precxx11-lin
 
 An alternative might be to install link:https://docs.djl.ai/engines/pytorch/pytorch-engine/index.html#load-your-own-pytorch-native-library[pytorch on the host] and specify the _PYTORCH_LIBRARY_PATH_ environment variable.
 
+. Start `edge` app in JVM:
++
+-----
+$ java -jar target/quarkus-app/quarkus-run.jar
+-----
+
 
 === Linux Containers
 
