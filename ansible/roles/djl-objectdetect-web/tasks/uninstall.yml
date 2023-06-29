@@ -20,3 +20,4 @@
     name: "{{ application_name }}"
     namespace: "{{ namespace }}"
     kind: Route
+    api_version: route.openshift.io/v1
