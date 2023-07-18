@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics;
 import java.io.InputStream;
@@ -57,8 +56,8 @@ import org.apache.commons.imaging.Imaging;
 @ApplicationScoped
 public class FingerprintResource extends BaseResource implements IApp {
 
-    private static final String FINGERPRINT_IMAGE_URL = "https://github.com/redhat-na-ssa/demo-rosa-sagemaker/raw/main/serving/client/images/232__M_Right_index_finger.png";
-    private static final String FINGERPRINT_MODEL_ARTIFACT_PREFIX = "model";
+    public static final String FINGERPRINT_IMAGE_URL = "https://github.com/redhat-na-ssa/demo-rosa-sagemaker/raw/main/serving/client/images/232__M_Right_index_finger.png";
+    public static final String FINGERPRINT_MODEL_ARTIFACT_PREFIX = "model";
 
     private static final Logger log = Logger.getLogger("FingerprintResource");
     
@@ -80,8 +79,12 @@ public class FingerprintResource extends BaseResource implements IApp {
 
     @PostConstruct
     public void startResource() {
-
         super.start();
+        loadModel();
+        this.continueToPredict = true;
+    }
+
+    private void loadModel() {
 
         File rootModelPath = new File(rootModelPathString);
         if(!rootModelPath.exists() || !rootModelPath.isDirectory())
@@ -209,6 +212,14 @@ public class FingerprintResource extends BaseResource implements IApp {
 
     public Uni<Response> predict() {
 
+        if(!continueToPredict){
+            ObjectMapper mapper = super.getObjectMapper();
+            ObjectNode rNode = mapper.createObjectNode();
+            rNode.put("STATUS", AppUtils.PREDICTION_INFERENCE_NOT_AVAILABLE);
+            Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
+            return Uni.createFrom().item(eRes);
+        }
+
         Predictor<Image, Classifications> predictor = null;
         try {
 
@@ -236,7 +247,14 @@ public class FingerprintResource extends BaseResource implements IApp {
             if(predictor != null)
                 predictor.close();
         }
+    }
 
+    public Uni<Response> stopPrediction() {
+
+        log.info("stopPrediction");
+        this.continueToPredict=false;
+        Response eRes = Response.status(Response.Status.OK).entity(AppUtils.PREDICTION_INFERENCE_STOPPED).build();
+        return Uni.createFrom().item(eRes);
     }
 
 }

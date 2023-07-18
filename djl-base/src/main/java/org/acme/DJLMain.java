@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -14,7 +15,6 @@ import jakarta.ws.rs.core.Response;
 
 import org.acme.apps.IApp;
 
-import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 
 import org.jboss.logging.Logger;
@@ -34,7 +34,13 @@ public abstract class DJLMain {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> predict() {
         return djlApp.get().predict();
-        
+    }
+
+    @DELETE
+    @Path("/stopPrediction")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> stopPrediction() {
+        return djlApp.get().stopPrediction();
     }
 
     @GET

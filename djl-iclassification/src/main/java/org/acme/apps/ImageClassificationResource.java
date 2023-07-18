@@ -26,10 +26,17 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
+
+import org.acme.AppUtils;
 import org.apache.commons.imaging.Imaging;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -118,6 +125,15 @@ public class ImageClassificationResource extends BaseResource implements IApp {
 
     public Uni<Response> predict() {
 
+
+        if(!continueToPredict){
+            ObjectMapper mapper = super.getObjectMapper();
+            ObjectNode rNode = mapper.createObjectNode();
+            rNode.put("STATUS", AppUtils.PREDICTION_INFERENCE_NOT_AVAILABLE);
+            Response eRes = Response.status(Response.Status.OK).entity(rNode.toPrettyString()).build();
+            return Uni.createFrom().item(eRes);
+        }
+
         Predictor<Image, Classifications> predictor = null;
         try {
 
@@ -136,6 +152,14 @@ public class ImageClassificationResource extends BaseResource implements IApp {
             if(predictor != null)
                 predictor.close();
         }
-    }       
+    }
+
+    public Uni<Response> stopPrediction() {
+
+        log.info("stopPrediction"); 
+        this.continueToPredict=false;
+        Response eRes = Response.status(Response.Status.OK).entity(AppUtils.PREDICTION_INFERENCE_STOPPED).build();
+        return Uni.createFrom().item(eRes);
+    }
     
 }

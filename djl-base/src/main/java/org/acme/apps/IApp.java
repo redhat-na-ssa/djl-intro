@@ -12,6 +12,7 @@ public interface IApp {
     public Uni<Response> getGpuCount();
     public Uni<Response> getGpuMemory();
     public Uni<Response> predict();
+    public Uni<Response> stopPrediction();
     public Uni<Response> listDJLModelZooAppSignatures();
     public Uni<Response> listAppModelInputsAndOutputs(ZooModel<?,?> appModel);
 

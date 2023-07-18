@@ -71,11 +71,4 @@ public class ObjectDetectionMain extends DJLMain {
         this.sseEventSink = sseEventSink;
     }
 
-    @POST
-    @Path("/stopPrediction")
-    public void stopPrediction() {
-        LiveObjectDetectionResource lodr = (LiveObjectDetectionResource)((InstanceImpl)djlApp).get();
-        lodr.stopPrediction();
-    }
-
 }

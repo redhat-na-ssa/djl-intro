@@ -69,6 +69,11 @@ class AppResource extends BaseResource implements IApp {
     }
 
     @Override
+    public Uni<Response> stopPrediction() {
+        throw new UnsupportedOperationException("Unimplemented method 'stopPrediction'");
+    }
+
+    @Override
     public ZooModel<?, ?> getAppModel() {
         throw new UnsupportedOperationException("Unimplemented method 'getAppModel'");
     }

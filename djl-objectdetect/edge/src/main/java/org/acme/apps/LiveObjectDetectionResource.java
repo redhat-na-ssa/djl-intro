@@ -120,7 +120,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
     Mat unboxedMat = null;
     Cancellable multiCancellable = null;
-    boolean continueToPredict = true;
+
 
     @PostConstruct
     public void startResource() {
@@ -151,11 +151,12 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
             unboxedMat = new Mat();
 
-
             // 3)  Load model
             model = loadModel();
 
-            // Keep pace with video buffer by reading frames from it at a configurable number of millis
+            continueToPredict = true;
+
+            // 4)  Keep pace with video buffer by reading frames from it at a configurable number of millis
             // On a different thread, this app will periodically evaluate the latest captured frame at that instant in time
             Multi<Long> vCaptureStreamer = Multi.createFrom().ticks().every((Duration.ofMillis(videoCaptureIntevalMillis))).onCancellation().invoke( () -> {
                 log.info("just cancelled video capture streamer");

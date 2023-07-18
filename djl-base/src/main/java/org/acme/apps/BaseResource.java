@@ -41,6 +41,8 @@ public class BaseResource {
 
     private Engine engine;
 
+    protected boolean continueToPredict = false;
+
     public void start() {
 
         Device gpuDevice = Device.gpu();  // Returns default GPU device
