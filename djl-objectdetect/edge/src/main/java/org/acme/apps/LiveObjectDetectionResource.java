@@ -19,7 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-
+import io.opentelemetry.api.internal.StringUtils;
 import io.quarkus.arc.lookup.LookupIfProperty;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.ConsumeEvent;
@@ -36,9 +36,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Core;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,6 +74,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     private static final String TENSORFLOW="tensorflow";
     private static final String MXNET="mxnet";
     private static final String PATTERN_FORMAT = "yyyy.MM.dd HH:mm:ss";
+    private static final String NO_TEST_FILE="NO_TEST_FILE";
 
     private static Logger log = Logger.getLogger("LiveObjectDetectionResource");
 
@@ -80,8 +83,11 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objecdetection.image.directory", defaultValue="/tmp/org.acme.objectdetection")
     String oDetectionDirString;
 
-    @ConfigProperty(name = "org.acme.objectdetection.video.capture.device.id", defaultValue = "0")
+    @ConfigProperty(name = "org.acme.objectdetection.video.capture.device.id", defaultValue = "-1")
     int videoCaptureDevice;
+
+    @ConfigProperty(name = "org.acme.objectdetection.test.video.file", defaultValue = NO_TEST_FILE)
+    String testVideoFile;
 
     @ConfigProperty(name = "org.acme.objectdetection.write.unadultered.image.to.disk", defaultValue = "False")
     boolean writeUnAdulateredImageToDisk;
@@ -122,11 +128,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         super.start();
         try {
 
-            /* Determine groups
-             *   troubleshoot:  podman run -it --rm  --group-add keep-groups quay.io/redhat_naps_da/djl-objectdetect-pytorch:0.0.3 id -a
-             */
-            UnixSystem uSystem = new UnixSystem();
-            long[] groups = uSystem.getGroups();
+
             
             // 1)  Ensure that app can write captured images to file system
             fileDir = new File(oDetectionDirString);
@@ -140,10 +142,7 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             model = loadModel();
             
             // 3) Enable web cam  (but don't start capturing images and executing object detection predictions on those images just yet)
-            OpenCV.loadShared();
-            vCapture = new VideoCapture(videoCaptureDevice);
-            if(!vCapture.isOpened())
-                throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice+" and OS groups: "+Arrays.toString(groups));
+            instantiateVideoCapture();
                 
             /* Implementations:
              *      ai.djl.pytorch.engine.PtNDManager
@@ -163,12 +162,10 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 vCapture.read(unboxedMat);
             });
 
-            log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}  and OS groups {3}", 
-                this.videoCaptureDevice, 
-                vCapture.isOpened(),
-                ndManager.getClass().getName(),
-                Arrays.toString(groups));
 
+
+        }catch(RuntimeException x) {
+            throw x;
         }catch(Throwable x){
             throw new RuntimeException(x);
         }finally {
@@ -377,4 +374,50 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         return ret;
     }
     
+    private void instantiateVideoCapture() throws Exception {
+
+        if(videoCaptureDevice > -1){
+
+            OpenCV.loadShared();
+
+            /* Determine groups
+             *   troubleshoot:  podman run -it --rm  --group-add keep-groups quay.io/redhat_naps_da/djl-objectdetect-pytorch:0.0.3 id -a
+             */
+            UnixSystem uSystem = new UnixSystem();
+            long[] groups = uSystem.getGroups();
+
+            vCapture = new VideoCapture(videoCaptureDevice);
+            if(!vCapture.isOpened())
+                throw new RuntimeException("Unable to access video capture device w/ id = " + this.videoCaptureDevice+" and OS groups: "+Arrays.toString(groups));
+
+            log.infov("start() video capture device = {0} is open =  {1}. Using NDManager {2}", 
+                this.videoCaptureDevice, 
+                vCapture.isOpened());
+
+        }else if(!StringUtils.isNullOrEmpty(this.testVideoFile)){
+
+            log.info("Working Directory = " + System.getProperty("user.dir"));
+
+            // Not actually needed
+            // Just ensure opencv-java gstreamer1-plugin-libav packages are installed and "java.library.path" includes path to those installed C++ libraries
+            //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+            OpenCV.loadShared();
+
+            vCapture = new VideoCapture(this.testVideoFile, Videoio.CAP_ANY);
+            log.infov("vCapture props: {0} {1} [2] [3]",
+                vCapture.get(Videoio.CAP_PROP_FOURCC),
+                vCapture.get(Videoio.CAP_PROP_FPS),
+                vCapture.get(Videoio.CAP_PROP_FRAME_WIDTH),
+                vCapture.get(Videoio.CAP_PROP_FRAME_HEIGHT) );
+            if(!vCapture.isOpened())
+                throw new RuntimeException("Unable to access test video = " + this.testVideoFile+" .  Do you have opencv-java & gstreamer packages installed (ie: dnf install opencv-java gstreamer1-plugin-libav) ?");
+
+            log.infov("start() video streaming on file = {0} is open =  {1}. Using NDManager {2}", 
+                this.testVideoFile, 
+                vCapture.isOpened());
+        }else {
+            throw new Exception("need to specify either a video capture device or a video file");
+        }
+    }
 }

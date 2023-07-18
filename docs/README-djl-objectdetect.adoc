@@ -48,21 +48,27 @@ You'll need a reliable broadband network due to downloading of a large quantity 
 
 . *JDK11* (or more recent)
 +
-ie: `dnf install java-latest-openjdk-devel`
+ie: `sudo dnf install java-latest-openjdk-devel`
 
 . *maven*
 +
-ie: `dnf install maven`
+ie: `sudo dnf install maven`
 
 . *cURL* (or similar http test utility)
 +
-ie: `dnf install curl`
+ie: `sudo dnf install curl`
 
 . *DJL_CACHE_DIR*
 +
 DJL engines link:https://djl.ai/docs/development/cache_management.html[download models] and any needed C++ shared object files to a directory specified by the environment variable: `DJL_CACHE_DIR` .  
 You are encouraged to set this environment variable in your shell.  
 Otherwise, DJL will write these files to: `$HOME/.djl.ai`
+
+. *opencv-java & gstreamer1-plugin-libav*
++
+ie: `sudo dnf install opencv-java gstreamer1-plugin-libav -y`
++
+NOTE: On Fedora/RHEL systems, opencv-java package places shared C++ object files in a path (/usr/lib/java) typically not included in `java.library.path`.   Subsequently, at runtime you'll need to specify a `java.library.path` that does include this directory.
 
 === Quarkus `dev mode`
 
@@ -82,19 +88,19 @@ $ mvn wrapper:wrapper
 .. *TensorFlow*
 +
 ```
-./mvnw quarkus:dev -Ptensorflow
+./mvnw quarkus:dev -Djvm.args=-Djava.library.path=/usr/lib/java -Ptensorflow
 ```
 
 .. *PyTorch*
 +
 -----
-./mvnw quarkus:dev -Ppytorch
+./mvnw quarkus:dev -Djvm.args=-Djava.library.path=/usr/lib/java -Ppytorch
 -----
 
 .. *MXNet*
 +
 -----
-./mvnw quarkus:dev -Pmxnet
+./mvnw quarkus:dev -Djvm.args=-Djava.library.path=/usr/lib/java -Pmxnet
 -----
 
 . View RESTful API exposed by app:
@@ -144,7 +150,9 @@ An alternative might be to install link:https://docs.djl.ai/engines/pytorch/pyto
 . Start `edge` app in JVM:
 +
 -----
-$ java -jar target/quarkus-app/quarkus-run.jar
+$ java \
+    -Djvm.args=-Djava.library.path=/usr/lib/java \ 
+    -jar target/quarkus-app/quarkus-run.jar
 -----
 
 
