@@ -138,10 +138,8 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             if(!(fileDir).canWrite())
                 throw new RuntimeException("Can not write in the following directory: "+fileDir.getAbsolutePath());
 
-            // 2)  Load model
-            model = loadModel();
             
-            // 3) Enable web cam  (but don't start capturing images and executing object detection predictions on those images just yet)
+            // 2) Enable web cam  (but don't start capturing images and executing object detection predictions on those images just yet)
             instantiateVideoCapture();
                 
             /* Implementations:
@@ -153,6 +151,10 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
 
             unboxedMat = new Mat();
 
+
+            // 3)  Load model
+            model = loadModel();
+
             // Keep pace with video buffer by reading frames from it at a configurable number of millis
             // On a different thread, this app will periodically evaluate the latest captured frame at that instant in time
             Multi<Long> vCaptureStreamer = Multi.createFrom().ticks().every((Duration.ofMillis(videoCaptureIntevalMillis))).onCancellation().invoke( () -> {
@@ -161,7 +163,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
             multiCancellable = vCaptureStreamer.subscribe().with( (i) -> {
                 vCapture.read(unboxedMat);
             });
-
 
 
         }catch(RuntimeException x) {
