@@ -57,7 +57,6 @@ import org.apache.commons.imaging.Imaging;
 public class FingerprintResource extends BaseResource implements IApp {
 
     public static final String FINGERPRINT_IMAGE_URL = "https://github.com/redhat-na-ssa/demo-rosa-sagemaker/raw/main/serving/client/images/232__M_Right_index_finger.png";
-    public static final String FINGERPRINT_MODEL_ARTIFACT_PREFIX = "model";
 
     private static final Logger log = Logger.getLogger("FingerprintResource");
     
@@ -69,8 +68,8 @@ public class FingerprintResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.djl.root.model.path")
     String rootModelPathString;
 
-    @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.prefix", defaultValue = FINGERPRINT_MODEL_ARTIFACT_PREFIX)
-    String modelPrefix;
+    @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.dirName", defaultValue = "model.savedmodel")
+    String modelDirName;
 
     @Inject
     Instance<PredictionProducer> pProducer;
@@ -90,14 +89,13 @@ public class FingerprintResource extends BaseResource implements IApp {
         if(!rootModelPath.exists() || !rootModelPath.isDirectory())
             throw new RuntimeException("Following root directory does not exist: "+rootModelPathString);
 
-        String modelPathString = modelPrefix+".savedmodel";
-        File modelPath = new File(rootModelPath, modelPathString);
+        File modelPath = new File(rootModelPath, modelDirName);
         if(!modelPath.exists() || !modelPath.isDirectory())
-            throw new RuntimeException("Following model path directory does not exist: "+modelPathString);
+            throw new RuntimeException("Following model path directory does not exist: "+modelDirName);
         else
             log.infov("model found!   {0}, # of model files = {1}", modelPath.getAbsoluteFile().getAbsolutePath(), modelPath.listFiles().length);
 
-        Path nioModelPath = this.findModelDir(rootModelPath.toPath(), modelPathString);
+        Path nioModelPath = this.findModelDir(rootModelPath.toPath(), modelDirName);
         log.infov("nioModelPath = {0}", nioModelPath);
 
         InputStream is = null;
@@ -154,7 +152,7 @@ public class FingerprintResource extends BaseResource implements IApp {
                 .optProgress(new ProgressBar())
                 .setTypes(Image.class, Classifications.class) // defines input and output data type
                 .optModelPath(Paths.get(this.rootModelPathString)) // search models in specified path
-                .optModelName(modelPathString) // specify model file directory
+                .optModelName(modelDirName) // specify model file directory
                 .optTranslator(cTranslator)
                 .build();
         

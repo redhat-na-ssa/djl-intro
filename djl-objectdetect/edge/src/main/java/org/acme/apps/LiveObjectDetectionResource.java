@@ -104,6 +104,12 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.objectdetection.video.capture.interval.millis", defaultValue = "50")
     int videoCaptureIntevalMillis;
 
+    @ConfigProperty(name = "org.acme.djl.root.model.path", defaultValue=AppUtils.NA)
+    String rootModelPathString;
+
+    @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.dirName", defaultValue = AppUtils.NA)
+    String modelDirName;
+
     @Inject
     CriteriaFilter cFilters;
 
@@ -331,28 +337,38 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
     }
 
     private ZooModel<Image, DetectedObjects> loadModel() throws IOException, ModelException {
-        Builder<Image, DetectedObjects> builder = Criteria.builder()
-            .optApplication(Application.CV.OBJECT_DETECTION)
-            .setTypes(Image.class, DetectedObjects.class)
-            .optProgress(new ProgressBar());
 
-        String eType = Engine.getDefaultEngineName();
-        Map<String, String> filters = null;
-        if(PYTORCH.equalsIgnoreCase(eType)) {
-            filters = cFilters.pytorch();
-        }else if(TENSORFLOW.equalsIgnoreCase(eType)){
-            filters = cFilters.tensorflow();
-        }else if(MXNET.equalsIgnoreCase(eType)) {
-            filters = cFilters.mxnet();
-        }else {
-            throw new RuntimeException("Unknown engine type: "+eType);
-        }
-        for(Entry<String, String> eObj : filters.entrySet() ){
-            builder = builder.optFilter(eObj.getKey(), eObj.getValue());
+        if(!AppUtils.NA.equals(this.modelDirName)){
+            log.info("loadModel() will load from "+this.modelDirName);
+            return null;
+        }else{
+           
+            Builder<Image, DetectedObjects> builder = Criteria.builder()
+                .optApplication(Application.CV.OBJECT_DETECTION)
+                .setTypes(Image.class, DetectedObjects.class)
+                .optProgress(new ProgressBar());
+    
+            String eType = Engine.getDefaultEngineName();
+            log.info("loadModel() will load from model zoo specific to: "+eType);
+
+            Map<String, String> filters = null;
+            if(PYTORCH.equalsIgnoreCase(eType)) {
+                filters = cFilters.pytorch();
+            }else if(TENSORFLOW.equalsIgnoreCase(eType)){
+                filters = cFilters.tensorflow();
+            }else if(MXNET.equalsIgnoreCase(eType)) {
+                filters = cFilters.mxnet();
+            }else {
+                throw new RuntimeException("Unknown engine type: "+eType);
+            }
+            for(Entry<String, String> eObj : filters.entrySet() ){
+                builder = builder.optFilter(eObj.getKey(), eObj.getValue());
+            }
+    
+            Criteria<Image, DetectedObjects> criteria = builder.build();
+            return criteria.loadModel();
         }
 
-        Criteria<Image, DetectedObjects> criteria = builder.build();
-        return criteria.loadModel();
     }
 
 

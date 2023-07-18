@@ -7,6 +7,7 @@ public class AppUtils {
     public static final String PREDICTION_INFERENCE_NOT_AVAILABLE="PREDICTION_INFERENCE_NOT_AVAILABLE";
     public static final String PREDICTION_INFERENCE_STOPPED="PREDICTION_INFERENCE_STOPPED";
     public static final String FPRINT_PREDICTION_EVENT_CHANNEL = "fprint-prediction-event";
+    public static final String NA="NA";
 
     public static final String LIVE_OBJECT_DETECTION = "liveObjectDetection";
     public static final String LIVE_OBJECT_DETECTION_INCOMING = "liveObjectDetectionIncoming";
