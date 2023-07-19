@@ -53,6 +53,7 @@ import ai.djl.translate.TranslatorContext;
 import ai.djl.translate.TranslateException;
 
 import org.acme.AppUtils;
+import org.acme.apps.s3.S3ModelLifecycle;
 import org.acme.apps.s3.S3Notification;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
@@ -73,12 +74,14 @@ public class FingerprintResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.djl.root.model.path")
     String rootModelPathString;
 
-    @ConfigProperty(name = "org.acme.djl.fingerprint.model.artifact.dirName", defaultValue = "model.savedmodel")
+    @ConfigProperty(name = "org.acme.djl.model.artifact.dirName", defaultValue = "model.savedmodel")
     String modelDirName;
 
     @Inject
     Instance<PredictionProducer> pProducer;
     
+    @Inject
+    S3ModelLifecycle modelLifecycle;
     
     ZooModel<Image, Classifications> appModel;
 
@@ -264,12 +267,30 @@ public class FingerprintResource extends BaseResource implements IApp {
      @Incoming(AppUtils.MODEL_NOTIFY)
      public void processModelStateChangeNotification(byte[] nMessageBytes) throws JsonMappingException, JsonProcessingException{
         String nMessage = new String(nMessageBytes);
-        log.infov("modelStateChangeNotification =  {0}", nMessage);
+        log.debugv("modelStateChangeNotification =  {0}", nMessage);
 
         ObjectMapper mapper = super.getObjectMapper();
         S3Notification modelN = mapper.readValue(nMessage, S3Notification.class);
         String key = modelN.key;
-        log.infov("model state change: type= {0} ; key= {1}", modelN.eventName, key);
+        
+        if(AppUtils.S3_OBJECT_CREATED.equals(modelN.eventName)){
+
+            this.stopPrediction();
+            org.acme.apps.s3.Record record = modelN.records.get(0);
+            String fileName = record.s3.object.key;
+            String fileSize = record.s3.object.size;
+            boolean success = modelLifecycle.pullAndSaveModel(fileName, Integer.parseInt(fileSize));
+
+            if(success){
+                loadModel();
+                this.continueToPredict = true;
+            }
+
+        }else if(AppUtils.S3_OBJECT_DELETED.equals(modelN.eventName)) {
+            log.warnv("WILL IGNORE model state change: type= {0} ; key= {1}", modelN.eventName, key);
+        }else{
+            log.errorv("WILL IGNORE model state change: type= {0} ; key= {1}", modelN.eventName, key);
+        }
 
      }
 
