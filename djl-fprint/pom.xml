@@ -33,10 +33,22 @@
       <artifactId>quarkus-resteasy-reactive</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-mqtt</artifactId>
+    </dependency>
+
     <!-- kafka -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+    </dependency>
+
+    <!-- minio -->
+    <dependency>
+        <groupId>io.quarkiverse.minio</groupId>
+        <artifactId>quarkus-minio</artifactId>
+        <version>3.1.0.Final</version>
     </dependency>
 
 

@@ -23,5 +23,9 @@ public class AppUtils {
     public static final String BASE64_DETECTED_IMAGE = "base64DetectedImage";
     public static final String CAPTURE_TIMESTAMP = "CAPTURE_TIMESTAMP";
     public static final String CAPTURE_COUNT = "CAPTURE_COUNT";
+
+    public static final String MODEL_NOTIFY = "modelNotify";
+    public static final String S3_OBJECT_CREATED = "s3:ObjectCreated:Put";
+    public static final String S3_OBJECT_DELETED = "s3:ObjectRemoved:Delete";
     
 }

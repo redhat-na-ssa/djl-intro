@@ -18,12 +18,16 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.arc.lookup.LookupIfProperty;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -49,6 +53,7 @@ import ai.djl.translate.TranslatorContext;
 import ai.djl.translate.TranslateException;
 
 import org.acme.AppUtils;
+import org.acme.apps.s3.S3Notification;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 
@@ -73,6 +78,7 @@ public class FingerprintResource extends BaseResource implements IApp {
 
     @Inject
     Instance<PredictionProducer> pProducer;
+    
     
     ZooModel<Image, Classifications> appModel;
 
@@ -254,5 +260,17 @@ public class FingerprintResource extends BaseResource implements IApp {
         Response eRes = Response.status(Response.Status.OK).entity(AppUtils.PREDICTION_INFERENCE_STOPPED).build();
         return Uni.createFrom().item(eRes);
     }
+
+     @Incoming(AppUtils.MODEL_NOTIFY)
+     public void processModelStateChangeNotification(byte[] nMessageBytes) throws JsonMappingException, JsonProcessingException{
+        String nMessage = new String(nMessageBytes);
+        log.infov("modelStateChangeNotification =  {0}", nMessage);
+
+        ObjectMapper mapper = super.getObjectMapper();
+        S3Notification modelN = mapper.readValue(nMessage, S3Notification.class);
+        String key = modelN.key;
+        log.infov("model state change: type= {0} ; key= {1}", modelN.eventName, key);
+
+     }
 
 }
