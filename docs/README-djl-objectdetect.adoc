@@ -355,6 +355,16 @@ NOTE: The result should return the id of your GPU enabled node.
 
 == Run Demo
 
+. View mqtt message counts in Artemis admin console
+
+.. Point your browser to the output of the following:
++
+-----
+$ http://localhost:8161
+-----
+
+.. Authenticate using the following credentials:  *djl*  /  *djl*
++
 image::images/djl-object-detect-mqtt-artemis-web-admin.png[]
 
 

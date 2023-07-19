@@ -94,7 +94,10 @@ services:
 
   minio:
     container_name: minio
-    image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z.fips
+
+    # https://github.com/jbride/minio_integrations_quickstart/blob/main/etc/minio/Dockerfile
+    image: quay.io/redhat_naps_da/minio:0.0.1
+
     entrypoint: >
       /bin/sh -c "
       /usr/bin/docker-entrypoint.sh minio server /data --console-address :9001
@@ -103,13 +106,36 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
 
+    environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
+      MINIO_NOTIFY_MQTT_ENABLE_MLNOTIFY: 'on'
+      MINIO_NOTIFY_MQTT_BROKER_MLNOTIFY: 'tcp://rht:1883'
+      MINIO_NOTIFY_MQTT_TOPIC_MLNOTIFY: 'djl-model-notify'
+      MINIO_NOTIFY_MQTT_USERNAME_MLNOTIFY: djl
+      MINIO_NOTIFY_MQTT_PASSWORD_MLNOTIFY: djl
 
       # Used by minio console to invoke minio REST APIs
       MINIO_SERVER_URL: 'http://rht:9000'
+    networks:
+      - rht-ml
+
+  minio-initialize:
+    container_name: minio-initialize
+
+    # https://github.com/jbride/minio_integrations_quickstart/blob/main/etc/minio/Dockerfile
+    image: quay.io/redhat_naps_da/minio:0.0.1
+
+    entrypoint: >
+      /bin/sh -c "
+      /opt/initialize.sh
+      "
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+    - ./minio/initialize.sh:/opt/initialize.sh:bind
     networks:
       - rht-ml
 
