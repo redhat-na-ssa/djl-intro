@@ -279,3 +279,9 @@ Open a browser tab and navigate to the output of the following:
 -----
 /q/swagger-ui`
 -----
+
+== TO-DO
+
+. locate `synset.txt`
++
+IOT do image classification, you will also ned the synset.txt which stores the classification class labels.

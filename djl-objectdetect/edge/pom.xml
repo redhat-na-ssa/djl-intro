@@ -62,28 +62,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-kubernetes-config</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-container-image-docker</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-kubernetes</artifactId>
-    </dependency>
-
-    <!--
-        $ helm install djl-objectdetect-tensorflow ./target/helm/kubernetes/djl-objectdetect-tensorflow        :   deploy helm configured artifacts to OCP
-      -->
-    <dependency>
-      <groupId>io.quarkiverse.helm</groupId>
-      <artifactId>quarkus-helm</artifactId>
-      <version>1.0.5</version>
     </dependency>
 
     <dependency>

@@ -56,7 +56,7 @@
     <dependency>
         <groupId>io.quarkiverse.helm</groupId>
         <artifactId>quarkus-helm</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.9</version>
     </dependency>
 
   </dependencies>
