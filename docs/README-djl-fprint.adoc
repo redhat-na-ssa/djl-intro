@@ -298,6 +298,8 @@ NOTE: The result should return the id of your GPU enabled node.
 
 == Minio Notifications
 
+. link:https://github.com/minio/minio/issues/11604#issuecomment-786284078[postStart lifecycle for Minio]
+
 -----
 $ podman run -it --rm \
         --entrypoint /bin/bash \

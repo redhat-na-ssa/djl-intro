@@ -3,6 +3,7 @@ package org.acme.apps;
 import java.io.File;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,11 +19,9 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.arc.lookup.LookupIfProperty;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -69,8 +68,6 @@ public class FingerprintResource extends BaseResource implements IApp {
     @ConfigProperty(name = "org.acme.djl.fingerprint.image.url", defaultValue = FINGERPRINT_IMAGE_URL)
     String imageUrl;
     
-    private Image image;
-
     @ConfigProperty(name = "org.acme.djl.root.model.path")
     String rootModelPathString;
 
@@ -85,10 +82,13 @@ public class FingerprintResource extends BaseResource implements IApp {
     
     ZooModel<Image, Classifications> appModel;
 
+    private Image image;
+
     @PostConstruct
     public void startResource() {
         super.start();
         loadModel();
+        loadImage();
         this.continueToPredict = true;
     }
 
@@ -107,7 +107,6 @@ public class FingerprintResource extends BaseResource implements IApp {
         Path nioModelPath = this.findModelDir(rootModelPath.toPath(), modelDirName);
         log.infov("nioModelPath = {0}", nioModelPath);
 
-        InputStream is = null;
         try {
 
             Translator<Image, Classifications> cTranslator = new Translator<Image, Classifications>() {
@@ -167,7 +166,17 @@ public class FingerprintResource extends BaseResource implements IApp {
         
             appModel = criteria.loadModel();
 
-            log.info("startResource() image classification based on: "+ imageUrl);
+        } catch (ModelNotFoundException | MalformedModelException | IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public void loadImage() {
+
+        InputStream is = null;
+        try {
+            log.info("loadImage() image classification based on: "+ imageUrl);
             URL url = new URL(imageUrl);
             is = url.openStream();
             BufferedImage origImage = Imaging.getBufferedImage(is);
@@ -185,8 +194,7 @@ public class FingerprintResource extends BaseResource implements IApp {
             ImageFactory iFactory = ImageFactory.getInstance();
             
             image = iFactory.fromImage(resizedImage); // Does this need to be transformed into a numpy array ???
-
-        } catch (ImageReadException | ModelNotFoundException | MalformedModelException | IOException e) {
+        } catch (ImageReadException | IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }finally {
@@ -194,8 +202,8 @@ public class FingerprintResource extends BaseResource implements IApp {
             if(is != null)
                 try { is.close(); }catch(Exception x){ x.printStackTrace();}
         }
-
     }
+
 
     private Path findModelDir(Path modelDir, String prefix) {
         Path path = modelDir.resolve(prefix);

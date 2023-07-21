@@ -134,8 +134,6 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
         super.start();
         try {
 
-
-            
             // 1)  Ensure that app can write captured images to file system
             fileDir = new File(oDetectionDirString);
             if(!fileDir.exists())
@@ -428,8 +426,10 @@ public class LiveObjectDetectionResource extends BaseResource implements IApp {
                 vCapture.get(Videoio.CAP_PROP_FPS),
                 vCapture.get(Videoio.CAP_PROP_FRAME_WIDTH),
                 vCapture.get(Videoio.CAP_PROP_FRAME_HEIGHT) );
-            if(!vCapture.isOpened())
-                throw new RuntimeException("Unable to access test video = " + this.testVideoFile+" .  Do you have opencv-java & gstreamer packages installed (ie: dnf install opencv-java gstreamer1-plugin-libav) ?");
+            if(!vCapture.isOpened()) {
+                log.errorv("value of java.library.path = {0}", System.getProperty("java.library.path"));
+                throw new RuntimeException("Unable to access test video = " + this.testVideoFile+" .  Do you have the following set correctly? :\n\t\t1) opencv-java & gstreamer packages installed (ie: dnf install opencv-java gstreamer1-plugin-libav)\n\t\t2) java.library.path includes path to shared libraries of opencv-java");
+            }
 
             log.infov("start() video streaming on file = {0} is open =  {1}. Using NDManager {2}", 
                 this.testVideoFile, 
